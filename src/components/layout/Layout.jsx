@@ -3,25 +3,6 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
-const NAV = [
-  { grupo: 'Principal', itens: [
-    { to: '/dashboard',     icon: '⬡', label: 'Dashboard' },
-    { to: '/rastreamento',  icon: '📍', label: 'Rastreador ao vivo' },
-  ]},
-  { grupo: 'Operações', itens: [
-    { to: '/abastecimento', icon: '⛽', label: 'Abastecimento' },
-    { to: '/pneus',         icon: '○', label: 'Pneus' },
-    { to: '/frete',         icon: '🧮', label: 'Cálculo de frete' },
-  ]},
-  { grupo: 'Gestão', itens: [
-    { to: '/veiculos',      icon: '🚛', label: 'Veículos' },
-    { to: '/custos',        icon: '📊', label: 'Custos' },
-    { to: '/multas',        icon: '⚠', label: 'Multas' },
-    { to: '/vencimentos',   icon: '📅', label: 'Vencimentos' },
-    ...(usuario?.perfil === 'ADMIN' ? [{ to: '/usuarios', icon: '👥', label: 'Usuários' }] : []),
-  ]},
-];
-
 const linkBase = {
   display: 'flex', alignItems: 'center', gap: 9,
   padding: '8px 10px', borderRadius: 7,
@@ -33,6 +14,25 @@ const linkBase = {
 export default function Layout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+
+  const NAV = [
+    { grupo: 'Principal', itens: [
+      { to: '/dashboard',     icon: '⬡', label: 'Dashboard' },
+      { to: '/rastreamento',  icon: '📍', label: 'Rastreador ao vivo' },
+    ]},
+    { grupo: 'Operações', itens: [
+      { to: '/abastecimento', icon: '⛽', label: 'Abastecimento' },
+      { to: '/pneus',         icon: '○', label: 'Pneus' },
+      { to: '/frete',         icon: '🧮', label: 'Cálculo de frete' },
+    ]},
+    { grupo: 'Gestão', itens: [
+      { to: '/veiculos',      icon: '🚛', label: 'Veículos' },
+      { to: '/custos',        icon: '📊', label: 'Custos' },
+      { to: '/multas',        icon: '⚠', label: 'Multas' },
+      { to: '/vencimentos',   icon: '📅', label: 'Vencimentos' },
+      ...(usuario?.perfil === 'ADMIN' ? [{ to: '/usuarios', icon: '👥', label: 'Usuários' }] : []),
+    ]},
+  ];
 
   function handleLogout() {
     logout();
