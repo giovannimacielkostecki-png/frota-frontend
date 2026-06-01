@@ -18,6 +18,7 @@ const NAV = [
     { to: '/custos',        icon: '📊', label: 'Custos' },
     { to: '/multas',        icon: '⚠', label: 'Multas' },
     { to: '/vencimentos',   icon: '📅', label: 'Vencimentos' },
+    ...(usuario?.perfil === 'ADMIN' ? [{ to: '/usuarios', icon: '👥', label: 'Usuários' }] : []),
   ]},
 ];
 
