@@ -14,6 +14,7 @@ import Frete from './components/pages/Frete';
 import Rastreamento from './components/pages/Rastreamento';
 import Usuarios from './components/pages/Usuarios';
 import { Spinner } from './components/ui';
+import Perfil from './components/pages/Perfil';
 
 function Privado({ children }) {
   const { usuario, carregando } = useAuth();
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="frete"          element={<Frete />} />
           <Route path="rastreamento"   element={<Rastreamento />} />
           <Route path="usuarios" element={<Usuarios />} />
+          <Route path="perfil" element={<Perfil />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
