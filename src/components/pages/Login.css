@@ -1,0 +1,82 @@
+.login-page {
+  width: 100%;
+  height: 100vh;
+
+  background: #000;
+
+  overflow: hidden;
+  position: relative;
+}
+
+
+.login-bg {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  object-position: center top;
+
+  position: absolute;
+  inset: 0;
+
+  filter:
+    contrast(1.05)
+    saturate(1.1);
+
+  background: #000;
+}
+
+  
+
+
+.login-form {
+  position: absolute;
+
+  top: 45%;
+  left:50%;
+
+  transform: translate(-50%, -50%);
+
+  width: 250px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-form input {
+  height: 42px;
+
+  border: none;
+  border-radius: 10px;
+
+  padding: 0 14px;
+
+  background: rgba(0,0,0,0.45);
+
+  color: white;
+
+  font-size: 14px;
+
+  outline: none;
+}
+
+.login-form button {
+  height: 46px;
+
+  border-radius: 12px;
+}
+
+/* celular */
+@media (max-width: 768px) {
+
+  .login-bg {
+   object-fit: contain;
+  }
+
+  .login-form {
+    width: 75%;
+    top: 65%;
+  }
+
+}
