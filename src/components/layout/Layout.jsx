@@ -3,6 +3,8 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
+
+
 const linkBase = {
   display: 'flex', alignItems: 'center', gap: 9,
   padding: '8px 10px', borderRadius: 7,
@@ -88,11 +90,11 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Footer */}
+       {/* Footer */}
         <div style={{ padding: '12px 16px', borderTop: '1px solid #30363d' }}>
-          <div style={{ fontSize: 12, fontWeight: 500, color: '#e6edf3', marginBottom: 2 }}>
+          <NavLink to="/perfil" style={{ fontSize: 12, fontWeight: 500, color: '#e6edf3', textDecoration: 'none', display: 'block', marginBottom: 2 }}>
             {usuario?.nome}
-          </div>
+          </NavLink>
           <div style={{ fontSize: 11, color: '#484f58', marginBottom: 8 }}>{usuario?.perfil}</div>
           <button onClick={handleLogout} style={{
             background: 'transparent', border: '1px solid #30363d',
@@ -101,7 +103,6 @@ export default function Layout() {
           }}>Sair</button>
         </div>
       </aside>
-
       {/* MAIN */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }} className="fade-in">
