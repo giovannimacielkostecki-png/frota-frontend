@@ -12,6 +12,7 @@ import Multas from './components/pages/Multas';
 import Vencimentos from './components/pages/Vencimentos';
 import Frete from './components/pages/Frete';
 import Rastreamento from './components/pages/Rastreamento';
+import Usuarios from './components/pages/Usuarios';
 import { Spinner } from './components/ui';
 
 function Privado({ children }) {
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="vencimentos"    element={<Vencimentos />} />
           <Route path="frete"          element={<Frete />} />
           <Route path="rastreamento"   element={<Rastreamento />} />
+          <Route path="usuarios" element={<Usuarios />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
