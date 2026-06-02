@@ -46,7 +46,7 @@ export default function Abastecimento() {
 
   const columns = [
     { key: 'data',        label: 'Data',    render: r => fmt.data(r.data) },
-    { key: 'veiculo',     label: 'Veículo', render: r => `${r.veiculo?.modelo} · ${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}` },
+    { key: 'veiculo',     label: 'Veículo', render: r => `${r.veiculo?.modelo} · ${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}`.toUpperCase() },
     { key: 'kmAtual',     label: 'KM',      mono: true, render: r => fmt.km(r.kmAtual) },
     { key: 'litros',      label: 'Litros',  mono: true, render: r => `${fmt.numero(r.litros)} L` },
     { key: 'valorTotal',  label: 'Valor',   mono: true, render: r => fmt.moeda(r.valorTotal) },
@@ -55,7 +55,7 @@ export default function Abastecimento() {
         const p = pilConsumo(r.consumoKmL);
         return <span style={{ color: p.color, fontFamily: "'DM Mono'" }}>{p.label}</span>;
     }},
-    { key: 'posto',       label: 'Posto',   render: r => r.posto || '—' },
+    { key: 'posto',       label: 'Posto',   render: r => (r.posto || '—').toUpperCase() },
   ];
 
   return (
@@ -111,10 +111,11 @@ export default function Abastecimento() {
         </Card>
       </div>
 
-    {/* HISTÓRICO */}
-<Card>
-  <CardHeader icon="🕐" title="Histórico de abastecimentos" />
-<div style={{ textTransform: 'uppercase' }}>
-  <Table columns={columns} rows={data?.registros || []} loading={loading} />
-</div>
-</Card>
+      {/* HISTÓRICO */}
+      <Card>
+        <CardHeader icon="🕐" title="Histórico de abastecimentos" />
+        <Table columns={columns} rows={data?.registros || []} loading={loading} />
+      </Card>
+    </div>
+  );
+}
