@@ -111,11 +111,10 @@ export default function Abastecimento() {
         </Card>
       </div>
 
-      {/* HISTÓRICO */}
-      <Card>
-        <CardHeader icon="🕐" title="Histórico de abastecimentos" />
-        <Table columns={columns} rows={data?.registros || []} loading={loading} />
-      </Card>
-    </div>
-  );
-}
+    {/* HISTÓRICO */}
+<Card>
+  <CardHeader icon="🕐" title="Histórico de abastecimentos" />
+  <div style={{ textTransform: 'uppercase' }}>
+    <Table columns={columns} rows={data?.registros || []} loading={loading} />
+  </div>
+</Card>
