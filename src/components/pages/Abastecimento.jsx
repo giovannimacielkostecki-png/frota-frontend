@@ -46,7 +46,7 @@ export default function Abastecimento() {
 
   const columns = [
     { key: 'data',        label: 'Data',    render: r => fmt.data(r.data) },
-    { key: 'veiculo',     label: 'Veículo', render: r => `${r.veiculo?.modelo} · ${r.veiculo?.placa}` },
+    { key: 'veiculo', label: 'Veículo', render: r => `${r.veiculo?.modelo} · ${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}` },
     { key: 'kmAtual',     label: 'KM',      mono: true, render: r => fmt.km(r.kmAtual) },
     { key: 'litros',      label: 'Litros',  mono: true, render: r => `${fmt.numero(r.litros)} L` },
     { key: 'valorTotal',  label: 'Valor',   mono: true, render: r => fmt.moeda(r.valorTotal) },
