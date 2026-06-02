@@ -46,7 +46,7 @@ export default function Abastecimento() {
 
   const columns = [
     { key: 'data',        label: 'Data',    render: r => fmt.data(r.data) },
-    { key: 'veiculo', label: 'Veículo', render: r => `${r.veiculo?.modelo} · ${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}` },
+    { key: 'veiculo',     label: 'Veículo', render: r => `${r.veiculo?.modelo} · ${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}` },
     { key: 'kmAtual',     label: 'KM',      mono: true, render: r => fmt.km(r.kmAtual) },
     { key: 'litros',      label: 'Litros',  mono: true, render: r => `${fmt.numero(r.litros)} L` },
     { key: 'valorTotal',  label: 'Valor',   mono: true, render: r => fmt.moeda(r.valorTotal) },
@@ -70,7 +70,11 @@ export default function Abastecimento() {
             <FormGrid>
               <Select label="Veículo" value={form.veiculoId} onChange={e => set('veiculoId', e.target.value)} required>
                 <option value="">Selecione...</option>
-                {(veiculos || []).map(v => <option key={v.id} value={v.id}>{v.modelo} · {v.placa}{v.motorista ? ` · ${v.motorista}` : ''}</option>)}
+                {(veiculos || []).map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.modelo} · {v.placa}{v.motorista ? ` · ${v.motorista}` : ''}
+                  </option>
+                ))}
               </Select>
               <Input label="Data" type="date" value={form.data} onChange={e => set('data', e.target.value)} required />
               <Input label="KM atual" type="number" placeholder="142.800" value={form.kmAtual} onChange={e => set('kmAtual', e.target.value)} required />
