@@ -114,7 +114,7 @@ export default function Abastecimento() {
     {/* HISTÓRICO */}
 <Card>
   <CardHeader icon="🕐" title="Histórico de abastecimentos" />
-  <div style={{ textTransform: 'uppercase' }}>
-    <Table columns={columns} rows={data?.registros || []} loading={loading} />
-  </div>
+<div style={{ textTransform: 'uppercase' }}>
+  <Table columns={columns} rows={data?.registros || []} loading={loading} />
+</div>
 </Card>
