@@ -70,7 +70,7 @@ export default function Abastecimento() {
             <FormGrid>
               <Select label="Veículo" value={form.veiculoId} onChange={e => set('veiculoId', e.target.value)} required>
                 <option value="">Selecione...</option>
-                {(veiculos || []).map(v => <option key={v.id} value={v.id}>{v.modelo} · {v.placa}</option>)}
+                {(veiculos || []).map(v => <option key={v.id} value={v.id}>{v.modelo} · {v.placa}{v.motorista ? ` · ${v.motorista}` : ''}</option>)}
               </Select>
               <Input label="Data" type="date" value={form.data} onChange={e => set('data', e.target.value)} required />
               <Input label="KM atual" type="number" placeholder="142.800" value={form.kmAtual} onChange={e => set('kmAtual', e.target.value)} required />
