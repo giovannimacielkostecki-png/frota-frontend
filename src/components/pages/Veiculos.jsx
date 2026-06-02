@@ -145,4 +145,37 @@ export default function Veiculos() {
         <Btn onClick={abrirNovo}>+ Novo veículo</Btn>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12,
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
+        <StatCard label="Total de veículos" value={(data || []).length} />
+        <StatCard label="Ativos"   value={(data || []).filter(v => v.ativo).length}  color="#3fb950" />
+        <StatCard label="Inativos" value={(data || []).filter(v => !v.ativo).length} color="#f85149" />
+      </div>
+
+      {showForm && (
+        <Card style={{ marginBottom: 16 }}>
+          <CardHeader icon={editando ? '✏️' : '➕'} title={editando ? 'Editar veículo' : 'Cadastrar veículo'} />
+          <form onSubmit={handleSubmit} style={{ padding: 16 }}>
+            <FormGrid>
+              <Input label="Placa"     value={form.placa}     onChange={e => set('placa', e.target.value.toUpperCase())} placeholder="BRA2E19" required />
+              <Input label="Modelo"    value={form.modelo}    onChange={e => set('modelo', e.target.value)}    placeholder="FH 540"      required />
+              <Input label="Marca"     value={form.marca}     onChange={e => set('marca', e.target.value)}     placeholder="Volvo"       required />
+              <Input label="Ano"       type="number" value={form.ano}       onChange={e => set('ano', e.target.value)}       required />
+              <Input label="RENAVAM"   value={form.renavam}   onChange={e => set('renavam', e.target.value)}   required />
+              <Input label="KM atual"  type="number" value={form.kmAtual}   onChange={e => set('kmAtual', e.target.value)} />
+              <Input label="Motorista" value={form.motorista} onChange={e => set('motorista', e.target.value)} placeholder="Nome do motorista" />
+            </FormGrid>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <Btn type="submit" loading={saving || updating}>{editando ? 'Atualizar' : 'Salvar'}</Btn>
+              <Btn variant="secondary" onClick={fecharForm}>Cancelar</Btn>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader icon="🚛" title="Frota completa" />
+        <Table columns={columns} rows={data || []} loading={loading} />
+      </Card>
+    </div>
+  );
+}
