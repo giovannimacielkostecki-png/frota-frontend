@@ -58,6 +58,12 @@ export default function Abastecimento() {
         const p = pilConsumo(r.consumoKmL);
         return <span style={{ color: p.color, fontFamily: "'DM Mono'" }}>{p.label}</span>;
     }},
+    { key: 'precoKm',     label: 'R$/km',   mono: true, render: r => {
+        if (!r.consumoKmL || !r.litros || !r.valorTotal) return '—';
+        const kmRodados = r.litros * r.consumoKmL;
+        if (!kmRodados) return '—';
+        return fmt.moeda(r.valorTotal / kmRodados);
+    }},
     { key: 'posto',       label: 'Posto',   render: r => (r.posto || '—').toUpperCase() },
   ];
 
