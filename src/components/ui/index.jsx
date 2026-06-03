@@ -151,6 +151,8 @@ export function Input({ label, ...props }) {
         outline: 'none',
         transition: 'border-color 0.15s',
         width: '100%',
+        WebkitAppearance: 'none',
+        MozAppearance: 'textfield',
         ...(props.style || {}),
       }}
         onFocus={e => e.target.style.borderColor = '#f0a500'}
