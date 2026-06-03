@@ -25,6 +25,10 @@ export default function Veiculos() {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  // Apenas veículos ativos aparecem na tabela. Os inativos continuam no banco,
+  // só ficam ocultos aqui. Para voltar a mostrar todos, troque por (data || []).
+  const veiculosVisiveis = (data || []).filter(v => v.ativo);
+
   function abrirNovo() {
     setEditando(null);
     setForm(FORM_VAZIO);
@@ -173,8 +177,8 @@ export default function Veiculos() {
       )}
 
       <Card>
-        <CardHeader icon="🚛" title="Frota completa" />
-        <Table columns={columns} rows={data || []} loading={loading} />
+        <CardHeader icon="🚛" title="Frota ativa" />
+        <Table columns={columns} rows={veiculosVisiveis} loading={loading} />
       </Card>
     </div>
   );
