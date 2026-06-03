@@ -226,6 +226,5 @@ export function FormGrid({ children, cols = 2 }) {
     }}>
       {children}
     </div>
-  
   );
 }
