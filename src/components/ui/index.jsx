@@ -226,18 +226,6 @@ export function FormGrid({ children, cols = 2 }) {
     }}>
       {children}
     </div>
-  /* Remove as setinhas dos campos de número (Chrome, Edge, Safari) */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Remove as setinhas no Firefox */
-input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
   
   );
 }
