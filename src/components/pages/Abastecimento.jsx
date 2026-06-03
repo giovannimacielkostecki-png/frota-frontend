@@ -6,6 +6,7 @@ import { Card, CardHeader, Table, Btn, Input, Select, FormGrid, PageLoading } fr
 import { fmt } from '../../utils';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import DatePicker from '../ui/DatePicker';
 
 function pilConsumo(v) {
   if (!v) return { label: '—', color: '#484f58' };
@@ -76,7 +77,7 @@ export default function Abastecimento() {
                   </option>
                 ))}
               </Select>
-              <Input label="Data" type="date" value={form.data} onChange={e => set('data', e.target.value)} required />
+              <DatePicker label="Data" value={form.data} onChange={v => set('data', v)} />
               <Input label="KM atual" type="number" placeholder="142.800" value={form.kmAtual} onChange={e => set('kmAtual', e.target.value)} required />
               <Input label="Litros Diesel" type="number" step="0.01" placeholder="320" value={form.litros} onChange={e => set('litros', e.target.value)} required />
               <Input label="Valor total Diesel (R$)" type="number" step="0.01" placeholder="1920.00" value={form.valorTotal} onChange={e => set('valorTotal', e.target.value)} required />
