@@ -29,6 +29,8 @@ export const abastecimentoAPI = {
   listar:       (params) => api.get('/abastecimentos', { params }),
   resumo:       (params) => api.get('/abastecimentos/resumo', { params }),
   criar:        (data)   => api.post('/abastecimentos', data),
+  atualizar:    (id, data) => api.put(`/abastecimentos/${id}`, data),   // novo
+  deletar:      (id)       => api.delete(`/abastecimentos/${id}`),       // novo
 };
 
 // ── PNEUS ────────────────────────────────────
