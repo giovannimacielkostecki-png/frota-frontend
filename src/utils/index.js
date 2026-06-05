@@ -6,7 +6,11 @@ export const fmt = {
   moeda:  (v) => v == null ? '—' : `R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
   numero: (v) => v == null ? '—' : Number(v).toLocaleString('pt-BR'),
   km:     (v) => v == null ? '—' : `${Number(v).toLocaleString('pt-BR')} km`,
-  data:   (d) => d ? format(typeof d === 'string' ? parseISO(d) : d, 'dd/MM/yyyy', { locale: ptBR }) : '—',
+  data: (d) => {
+  if (!d) return '—';
+  const str = typeof d === 'string' ? d : d.toISOString();
+  const [y, m, day] = str.slice(0, 10).split('-');
+  return `${day}/${m}/${y}`;
   dataHora:(d)=> d ? format(typeof d === 'string' ? parseISO(d) : d, 'dd/MM/yy HH:mm', { locale: ptBR }) : '—',
   consumo:(v) => v == null ? '—' : `${Number(v).toFixed(1)} km/L`,
 };
