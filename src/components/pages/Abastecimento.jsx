@@ -41,7 +41,7 @@ export default function Abastecimento() {
     setEditando(r.id);
     setForm({
       veiculoId:  r.veiculoId,
-      data:       r.data?.slice(0, 10),
+      data:       new Date(r.data).toLocaleDateString('en-CA'),
       kmAtual:    r.kmAtual,
       litros:     r.litros,
       valorTotal: r.valorTotal,
