@@ -15,57 +15,137 @@ function pilConsumo(v) {
   return { label: `${v} km/L`, color: '#f85149' };
 }
 
+const FORM_VAZIO = {
+  veiculoId: '', data: new Date().toISOString().slice(0, 10),
+  kmAtual: '', litros: '', valorTotal: '', posto: '',
+  litrosArla: '', valorArla: '',
+};
+
 export default function Abastecimento() {
-  const { data: veiculos }                  = useFetch(() => veiculoAPI.listar());
-  const { data, loading, refetch }          = useFetch(() => abastecimentoAPI.listar({ limit: 30 }));
-  const { data: resumo }                    = useFetch(() => abastecimentoAPI.resumo({ mes: new Date().getMonth() + 1, ano: new Date().getFullYear() }));
-  const { executar: criar, loading: saving} = useMutation(abastecimentoAPI.criar);
+  const { data: veiculos }                    = useFetch(() => veiculoAPI.listar());
+  const { data, loading, refetch }            = useFetch(() => abastecimentoAPI.listar({ limit: 30 }));
+  const { data: resumo }                      = useFetch(() => abastecimentoAPI.resumo({ mes: new Date().getMonth() + 1, ano: new Date().getFullYear() }));
+  const { executar: criar,     loading: saving }   = useMutation(abastecimentoAPI.criar);
+  const { executar: atualizar, loading: updating } = useMutation(abastecimentoAPI.atualizar);
+  const { executar: deletar,   loading: deleting } = useMutation(abastecimentoAPI.deletar);
 
-  // Só veículos ativos aparecem no dropdown de seleção.
-  const veiculosAtivos = (veiculos || []).filter(v => v.ativo);
+  const veiculosAtivos = (veiculos || []).filter(v => v.ativo !== false);
 
-  const [form, setForm] = useState({
-    veiculoId: '', data: new Date().toISOString().slice(0, 10),
-    kmAtual: '', litros: '', valorTotal: '', posto: '',
-    litrosArla: '', valorArla: '',
-  });
+  const [form,          setForm]          = useState(FORM_VAZIO);
+  const [editando,      setEditando]      = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  function abrirEditar(r) {
+    setEditando(r.id);
+    setForm({
+      veiculoId:  r.veiculoId,
+      data:       r.data?.slice(0, 10),
+      kmAtual:    r.kmAtual,
+      litros:     r.litros,
+      valorTotal: r.valorTotal,
+      posto:      r.posto || '',
+      litrosArla: r.litrosArla || '',
+      valorArla:  r.valorArla  || '',
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function fecharForm() {
+    setEditando(null);
+    setForm(FORM_VAZIO);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.veiculoId) { toast.error('Selecione um veículo'); return; }
-    await criar({
+    const payload = {
       ...form,
-      kmAtual: Number(form.kmAtual),
-      litros: Number(form.litros),
+      kmAtual:    Number(form.kmAtual),
+      litros:     Number(form.litros),
       valorTotal: Number(form.valorTotal),
       litrosArla: form.litrosArla ? Number(form.litrosArla) : null,
-      valorArla: form.valorArla ? Number(form.valorArla) : null,
-    });
-    toast.success('Abastecimento registrado!');
-    setForm(p => ({ ...p, kmAtual: '', litros: '', valorTotal: '', posto: '', litrosArla: '', valorArla: '' }));
+      valorArla:  form.valorArla  ? Number(form.valorArla)  : null,
+    };
+    if (editando) {
+      await atualizar(editando, payload);
+      toast.success('Abastecimento atualizado!');
+    } else {
+      await criar(payload);
+      toast.success('Abastecimento registrado!');
+    }
+    fecharForm();
     refetch();
   }
 
+  async function handleDeletar(id) {
+    await deletar(id);
+    toast.success('Abastecimento excluído!');
+    setConfirmDelete(null);
+    refetch();
+  }
+
+  const btnEditar = {
+    background: 'rgba(88,166,255,.15)', color: '#58a6ff',
+    border: '1px solid rgba(88,166,255,.3)',
+    borderRadius: 6, padding: '4px 10px',
+    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  };
+  const btnExcluir = {
+    background: 'rgba(248,81,73,.12)', color: '#f85149',
+    border: '1px solid rgba(248,81,73,.25)',
+    borderRadius: 6, padding: '4px 10px',
+    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  };
+  const btnSim = {
+    background: 'rgba(248,81,73,.2)', color: '#f85149',
+    border: '1px solid rgba(248,81,73,.4)',
+    borderRadius: 6, padding: '4px 8px',
+    fontSize: 11, fontWeight: 700, cursor: 'pointer',
+  };
+  const btnNao = {
+    background: 'rgba(139,148,158,.15)', color: '#8b949e',
+    border: '1px solid rgba(139,148,158,.3)',
+    borderRadius: 6, padding: '4px 8px',
+    fontSize: 11, fontWeight: 700, cursor: 'pointer',
+  };
+
   const columns = [
-    { key: 'data',        label: 'Data',    render: r => fmt.data(r.data) },
-    { key: 'veiculo',     label: 'Veículo', render: r => `${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}`.toUpperCase() },
-    { key: 'kmAtual',     label: 'KM',      mono: true, render: r => fmt.km(r.kmAtual) },
-    { key: 'litros',      label: 'Litros',  mono: true, render: r => `${fmt.numero(r.litros)} L` },
-    { key: 'valorTotal',  label: 'Valor',   mono: true, render: r => fmt.moeda(r.valorTotal) },
-    { key: 'litrosArla',  label: 'Arla',    mono: true, render: r => r.litrosArla ? `${fmt.numero(r.litrosArla)} L` : '—' },
-    { key: 'consumoKmL',  label: 'Consumo', render: r => {
+    { key: 'data',       label: 'Data',    render: r => fmt.data(r.data) },
+    { key: 'veiculo',    label: 'Veículo', render: r => `${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}`.toUpperCase() },
+    { key: 'kmAtual',    label: 'KM',      mono: true, render: r => fmt.km(r.kmAtual) },
+    { key: 'litros',     label: 'Litros',  mono: true, render: r => `${fmt.numero(r.litros)} L` },
+    { key: 'valorTotal', label: 'Valor',   mono: true, render: r => fmt.moeda(r.valorTotal) },
+    { key: 'litrosArla', label: 'Arla',    mono: true, render: r => r.litrosArla ? `${fmt.numero(r.litrosArla)} L` : '—' },
+    { key: 'consumoKmL', label: 'Consumo', render: r => {
         const p = pilConsumo(r.consumoKmL);
         return <span style={{ color: p.color, fontFamily: "'DM Mono'" }}>{p.label}</span>;
     }},
-    { key: 'precoKm',     label: 'R$/km',   mono: true, render: r => {
+    { key: 'precoKm', label: 'R$/km', mono: true, render: r => {
         if (!r.consumoKmL || !r.litros || !r.valorTotal) return '—';
         const kmRodados = r.litros * r.consumoKmL;
         if (!kmRodados) return '—';
         return fmt.moeda(r.valorTotal / kmRodados);
     }},
-    { key: 'posto',       label: 'Posto',   render: r => (r.posto || '—').toUpperCase() },
+    { key: 'posto', label: 'Posto', render: r => (r.posto || '—').toUpperCase() },
+    {
+      key: 'acoes', label: 'Ações',
+      render: r => (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <button style={btnEditar} onClick={() => abrirEditar(r)}>✏️ Editar</button>
+          {confirmDelete === r.id ? (
+            <>
+              <span style={{ fontSize: 11, color: '#f85149', fontWeight: 600 }}>Confirmar?</span>
+              <button style={btnSim} disabled={deleting} onClick={() => handleDeletar(r.id)}>Sim</button>
+              <button style={btnNao} onClick={() => setConfirmDelete(null)}>Não</button>
+            </>
+          ) : (
+            <button style={btnExcluir} onClick={() => setConfirmDelete(r.id)}>🗑️ Excluir</button>
+          )}
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -73,9 +153,8 @@ export default function Abastecimento() {
       <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Abastecimento</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        {/* FORMULÁRIO */}
         <Card>
-          <CardHeader icon="⛽" title="Registrar abastecimento" />
+          <CardHeader icon="⛽" title={editando ? 'Editar abastecimento' : 'Registrar abastecimento'} />
           <form onSubmit={handleSubmit} style={{ padding: 16 }}>
             <FormGrid>
               <Select label="Veículo" value={form.veiculoId} onChange={e => set('veiculoId', e.target.value)} required>
@@ -94,13 +173,17 @@ export default function Abastecimento() {
               <Input label="Litros Arla (opcional)" type="number" step="0.01" placeholder="0" value={form.litrosArla} onChange={e => set('litrosArla', e.target.value)} />
               <Input label="Valor Arla (R$) (opcional)" type="number" step="0.01" placeholder="0.00" value={form.valorArla} onChange={e => set('valorArla', e.target.value)} />
             </FormGrid>
-            <Btn type="submit" loading={saving} style={{ marginTop: 12, width: '100%', justifyContent: 'center' }}>
-              Salvar abastecimento
-            </Btn>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <Btn type="submit" loading={saving || updating} style={{ flex: 1, justifyContent: 'center' }}>
+                {editando ? 'Atualizar' : 'Salvar abastecimento'}
+              </Btn>
+              {editando && (
+                <Btn variant="secondary" onClick={fecharForm}>Cancelar</Btn>
+              )}
+            </div>
           </form>
         </Card>
 
-        {/* GRÁFICO CONSUMO */}
         <Card>
           <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
           <div style={{ padding: 16, height: 240 }}>
@@ -121,7 +204,6 @@ export default function Abastecimento() {
         </Card>
       </div>
 
-      {/* HISTÓRICO */}
       <Card>
         <CardHeader icon="🕐" title="Histórico de abastecimentos" />
         <Table columns={columns} rows={data?.registros || []} loading={loading} />
