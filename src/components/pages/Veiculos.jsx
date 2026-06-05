@@ -7,9 +7,7 @@ import { fmt } from '../../utils';
 import toast from 'react-hot-toast';
 
 const FORM_VAZIO = {
-  placa: '', modelo: '', marca: '',
-  ano: new Date().getFullYear(),
-  renavam: '', kmAtual: 0, motorista: '',
+  placa: '', kmAtual: 0, motorista: '',
 };
 
 export default function Veiculos() {
@@ -25,8 +23,6 @@ export default function Veiculos() {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  // Apenas veículos ativos aparecem na tabela. Os inativos continuam no banco,
-  // só ficam ocultos aqui. Para voltar a mostrar todos, troque por (data || []).
   const veiculosVisiveis = (data || []).filter(v => v.ativo !== false);
 
   function abrirNovo() {
@@ -39,10 +35,6 @@ export default function Veiculos() {
     setEditando(veiculo.id);
     setForm({
       placa:     veiculo.placa,
-      modelo:    veiculo.modelo,
-      marca:     veiculo.marca,
-      ano:       veiculo.ano,
-      renavam:   veiculo.renavam,
       kmAtual:   veiculo.kmAtual,
       motorista: veiculo.motorista || '',
     });
@@ -58,7 +50,7 @@ export default function Veiculos() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const payload = { ...form, ano: Number(form.ano), kmAtual: Number(form.kmAtual) };
+    const payload = { ...form, kmAtual: Number(form.kmAtual) };
     if (editando) {
       await atualizar(editando, payload);
       toast.success('Veículo atualizado!');
@@ -106,9 +98,6 @@ export default function Veiculos() {
 
   const columns = [
     { key: 'placa',     label: 'Placa',     mono: true },
-    { key: 'modelo',    label: 'Modelo' },
-    { key: 'marca',     label: 'Marca' },
-    { key: 'ano',       label: 'Ano',       mono: true },
     { key: 'motorista', label: 'Motorista', render: r => r.motorista || '—' },
     { key: 'kmAtual',   label: 'KM atual',  mono: true, render: r => fmt.km(r.kmAtual) },
     {
@@ -151,8 +140,8 @@ export default function Veiculos() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
         <StatCard label="Total de veículos" value={(data || []).length} />
-        <StatCard label="Ativos"   value={(data || []).filter(v => v.ativo).length}  color="#3fb950" />
-        <StatCard label="Inativos" value={(data || []).filter(v => !v.ativo).length} color="#f85149" />
+        <StatCard label="Ativos"   value={(data || []).filter(v => v.ativo !== false).length} color="#3fb950" />
+        <StatCard label="Inativos" value={(data || []).filter(v => v.ativo === false).length} color="#f85149" />
       </div>
 
       {showForm && (
@@ -161,11 +150,7 @@ export default function Veiculos() {
           <form onSubmit={handleSubmit} style={{ padding: 16 }}>
             <FormGrid>
               <Input label="Placa"     value={form.placa}     onChange={e => set('placa', e.target.value.toUpperCase())} placeholder="BRA2E19" required />
-              <Input label="Modelo"    value={form.modelo}    onChange={e => set('modelo', e.target.value)}    placeholder="FH 540"      required />
-              <Input label="Marca"     value={form.marca}     onChange={e => set('marca', e.target.value)}     placeholder="Volvo"       required />
-              <Input label="Ano"       type="number" value={form.ano}       onChange={e => set('ano', e.target.value)}       required />
-              <Input label="RENAVAM"   value={form.renavam}   onChange={e => set('renavam', e.target.value)}   required />
-              <Input label="KM atual"  type="number" value={form.kmAtual}   onChange={e => set('kmAtual', e.target.value)} />
+              <Input label="KM atual"  type="number" value={form.kmAtual} onChange={e => set('kmAtual', e.target.value)} />
               <Input label="Motorista" value={form.motorista} onChange={e => set('motorista', e.target.value)} placeholder="Nome do motorista" />
             </FormGrid>
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
