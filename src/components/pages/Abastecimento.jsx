@@ -82,7 +82,7 @@ export default function Abastecimento() {
                 <option value="">Selecione...</option>
                 {veiculosAtivos.map(v => (
                   <option key={v.id} value={v.id}>
-                    {v.modelo} · {v.placa}{v.motorista ? ` · ${v.motorista}` : ''}
+                    {v.placa}{v.motorista ? ` · ${v.motorista}` : ''}
                   </option>
                 ))}
               </Select>
