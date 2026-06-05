@@ -16,7 +16,7 @@ function pilConsumo(v) {
 }
 
 const FORM_VAZIO = {
-  veiculoId: '', data: new Date().toISOString().slice(0, 10),
+  veiculoId: '', data: new Date().toLocaleDateString('en-CA'),
   kmAtual: '', litros: '', valorTotal: '', posto: '',
   litrosArla: '', valorArla: '',
 };
