@@ -1,137 +1,151 @@
-// src/components/ui/DatePicker.jsx
-import { useState, useRef, useEffect } from 'react';
+// src/controllers/abastecimentoController.js
+import prisma from '../config/database.js';
 
-const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const DIAS  = ['D','S','T','Q','Q','S','S'];
+async function listar(req, res, next) {
+  try {
+    const { veiculoId, de, ate, page = 1, limit = 20 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const where = {
+      veiculoId: veiculoId ? Number(veiculoId) : undefined,
+      data: {
+        gte: de  ? new Date(de)  : undefined,
+        lte: ate ? new Date(ate) : undefined,
+      },
+    };
+    const [total, registros] = await Promise.all([
+      prisma.abastecimento.count({ where }),
+      prisma.abastecimento.findMany({
+        where,
+        include: { veiculo: { select: { placa: true, modelo: true, motorista: true } } },
+        orderBy: { data: 'desc' },
+        skip,
+        take: Number(limit),
+      }),
+    ]);
+    res.json({ total, pagina: Number(page), registros });
+  } catch (err) { next(err); }
+}
 
-function parseISO(s) {
-  if (!s) return null;
-  const [y, m, d] = s.split('-').map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d);
-}
-function toISO(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-function formatBR(s) {
-  const d = parseISO(s);
-  if (!d) return '';
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+async function criar(req, res, next) {
+  try {
+    const {
+      veiculoId: veiculoIdRaw,
+      kmAtual: kmAtualRaw,
+      litros: litrosRaw,
+      valorTotal: valorTotalRaw,
+      litrosArla: litrosArlaRaw,
+      valorArla: valorArlaRaw,
+      ...resto
+    } = req.body;
+
+    const veiculoId  = Number(veiculoIdRaw);
+    const kmAtual    = Number(kmAtualRaw);
+    const litros     = parseFloat(litrosRaw);
+    const valorTotal = parseFloat(valorTotalRaw);
+    const litrosArla = litrosArlaRaw ? parseFloat(litrosArlaRaw) : undefined;
+    const valorArla  = valorArlaRaw  ? parseFloat(valorArlaRaw)  : undefined;
+
+    // Busca abastecimento anterior pelo KM (correto para inserções fora de ordem)
+    const anterior = await prisma.abastecimento.findFirst({
+      where: { veiculoId, kmAtual: { lt: kmAtual } },
+      orderBy: { kmAtual: 'desc' },
+    });
+    const kmAnterior = anterior?.kmAtual ?? null;
+    const consumoKmL = kmAnterior && (kmAtual - kmAnterior) > 0
+      ? parseFloat(((kmAtual - kmAnterior) / litros).toFixed(2))
+      : null;
+    const precoPorLitro = parseFloat((valorTotal / litros).toFixed(4));
+    if (resto.data) resto.data = resto.data + 'T12:00:00.000Z';
+
+    const [abastecimento] = await prisma.$transaction([
+      prisma.abastecimento.create({
+        data: {
+          veiculoId, kmAtual, kmAnterior, litros, valorTotal,
+          precoPorLitro, consumoKmL,
+          ...(litrosArla !== undefined && { litrosArla }),
+          ...(valorArla  !== undefined && { valorArla }),
+          ...resto,
+        },
+        include: { veiculo: { select: { placa: true, modelo: true, motorista: true } } },
+      }),
+      prisma.veiculo.update({
+        where: { id: veiculoId },
+        data: { kmAtual },
+      }),
+      prisma.custo.create({
+        data: {
+          veiculoId,
+          tipo: 'COMBUSTIVEL',
+          descricao: `Abastecimento ${litros}L`,
+          valor: valorTotal,
+          data: new Date(resto.data),
+          fornecedor: resto.posto,
+        },
+      }),
+    ]);
+    res.status(201).json(abastecimento);
+  } catch (err) { next(err); }
 }
 
-const navBtn = {
-  background: '#21262d', border: '1px solid #30363d', borderRadius: 6,
-  color: '#e6edf3', width: 26, height: 26, fontSize: 14, cursor: 'pointer', lineHeight: 1,
+async function atualizar(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+    const { kmAtual, litros, valorTotal, posto, litrosArla, valorArla, data } = req.body;
+    const updated = await prisma.abastecimento.update({
+      where: { id },
+      data: {
+        kmAtual:    kmAtual    ? Number(kmAtual)        : undefined,
+        litros:     litros     ? parseFloat(litros)     : undefined,
+        valorTotal: valorTotal ? parseFloat(valorTotal) : undefined,
+        posto:      posto      ?? undefined,
+        litrosArla: litrosArla ? parseFloat(litrosArla) : null,
+        valorArla:  valorArla  ? parseFloat(valorArla)  : null,
+        data:       data       ? new Date(data + 'T12:00:00.000Z') : undefined,
+      },
+    });
+    res.json(updated);
+  } catch (err) { next(err); }
+}
+
+async function deletar(req, res, next) {
+  try {
+    await prisma.abastecimento.delete({ where: { id: Number(req.params.id) } });
+    res.status(204).send();
+  } catch (err) { next(err); }
+}
+
+async function resumoPorVeiculo(req, res, next) {
+  try {
+    const { mes, ano } = req.query;
+    const inicio = new Date(ano || new Date().getFullYear(), (mes || new Date().getMonth() + 1) - 1, 1);
+    const fim    = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0, 23, 59, 59);
+    const resumo = await prisma.abastecimento.groupBy({
+      by: ['veiculoId'],
+      where: { data: { gte: inicio, lte: fim } },
+      _sum:  { litros: true, valorTotal: true },
+      _avg:  { consumoKmL: true },
+      _count: { id: true },
+    });
+    const veiculoIds = resumo.map(r => r.veiculoId);
+    const veiculos   = await prisma.veiculo.findMany({
+      where: { id: { in: veiculoIds } },
+      select: { id: true, placa: true, modelo: true },
+    });
+    const mapa = Object.fromEntries(veiculos.map(v => [v.id, v]));
+    res.json(resumo.map(r => ({
+      veiculo: mapa[r.veiculoId],
+      totalLitros:       r._sum.litros,
+      totalValor:        r._sum.valorTotal,
+      mediaConsumo:      r._avg.consumoKmL ? parseFloat(r._avg.consumoKmL.toFixed(2)) : null,
+      qtdAbastecimentos: r._count.id,
+    })));
+  } catch (err) { next(err); }
+}
+
+export default {
+  listar,
+  resumoPorVeiculo,
+  criar,
+  atualizar,
+  deletar,
 };
-const linkBtn = {
-  background: 'none', border: 'none', color: '#f0a500',
-  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-};
-
-export default function DatePicker({ label, value, onChange }) {
-  const [open, setOpen] = useState(false);
-  const selected = parseISO(value);
-  const [view, setView] = useState(selected || new Date());
-  const ref = useRef(null);
-
-  useEffect(() => { if (selected) setView(selected); }, [value]);
-
-  useEffect(() => {
-    function onClickOut(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    if (open) document.addEventListener('mousedown', onClickOut);
-    return () => document.removeEventListener('mousedown', onClickOut);
-  }, [open]);
-
-  const hoje = new Date();
-  const ano = view.getFullYear();
-  const mes = view.getMonth();
-  const primeiroDia = new Date(ano, mes, 1).getDay();
-  const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-
-  const celulas = [];
-  for (let i = 0; i < primeiroDia; i++) celulas.push(null);
-  for (let d = 1; d <= diasNoMes; d++) celulas.push(d);
-
-  const ehSelecionado = (d) => selected && selected.getFullYear() === ano && selected.getMonth() === mes && selected.getDate() === d;
-  const ehHoje = (d) => hoje.getFullYear() === ano && hoje.getMonth() === mes && hoje.getDate() === d;
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'relative' }} ref={ref}>
-      {label && <label style={{ fontSize: 11, color: '#484f58', fontWeight: 500 }}>{label}</label>}
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        style={{
-          background: '#21262d',
-          border: `1px solid ${open ? '#f0a500' : '#30363d'}`,
-          borderRadius: 7, padding: '8px 12px',
-          color: value ? '#e6edf3' : '#484f58',
-          fontSize: 13, fontFamily: "'DM Sans', sans-serif",
-          textAlign: 'left', cursor: 'pointer', width: '100%',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}
-      >
-        <span>{value ? formatBR(value) : 'Selecione a data'}</span>
-        <span style={{ color: '#f0a500' }}>📅</span>
-      </button>
-
-      {open && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, marginTop: 6, zIndex: 50,
-          background: '#161b22', border: '1px solid #30363d', borderRadius: 10,
-          padding: 12, width: 260, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#e6edf3', textTransform: 'capitalize' }}>
-              {MESES[mes]} de {ano}
-            </span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <button type="button" onClick={() => setView(new Date(ano, mes - 1, 1))} style={navBtn}>‹</button>
-              <button type="button" onClick={() => setView(new Date(ano, mes + 1, 1))} style={navBtn}>›</button>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>
-            {DIAS.map((d, i) => (
-              <div key={i} style={{ textAlign: 'center', fontSize: 10, color: '#484f58', fontWeight: 600, padding: '4px 0' }}>{d}</div>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
-            {celulas.map((d, i) => d === null ? (
-              <div key={i} />
-            ) : (
-              <button
-                key={i}
-                type="button"
-                onClick={() => { onChange(toISO(new Date(ano, mes, d))); setOpen(false); }}
-                style={{
-                  border: ehHoje(d) && !ehSelecionado(d) ? '1px solid #30363d' : '1px solid transparent',
-                  background: ehSelecionado(d) ? '#f0a500' : 'transparent',
-                  color: ehSelecionado(d) ? '#000' : '#e6edf3',
-                  borderRadius: 6, padding: '6px 0', fontSize: 12,
-                  fontWeight: ehSelecionado(d) ? 700 : 500, cursor: 'pointer',
-                  fontFamily: "'DM Mono', monospace",
-                }}
-                onMouseEnter={e => { if (!ehSelecionado(d)) e.currentTarget.style.background = 'rgba(240,165,0,0.15)'; }}
-                onMouseLeave={e => { if (!ehSelecionado(d)) e.currentTarget.style.background = 'transparent'; }}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, borderTop: '1px solid #30363d', paddingTop: 8 }}>
-            <button type="button" onClick={() => { onChange(''); setOpen(false); }} style={linkBtn}>Limpar</button>
-            <button type="button" onClick={() => { onChange(toISO(new Date())); setOpen(false); }} style={linkBtn}>Hoje</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
