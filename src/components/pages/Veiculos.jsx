@@ -27,7 +27,7 @@ export default function Veiculos() {
 
   // Apenas veículos ativos aparecem na tabela. Os inativos continuam no banco,
   // só ficam ocultos aqui. Para voltar a mostrar todos, troque por (data || []).
-  const veiculosVisiveis = (data || []).filter(v => v.ativo);
+  const veiculosVisiveis = (data || []).filter(v => v.ativo !== false);
 
   function abrirNovo() {
     setEditando(null);
