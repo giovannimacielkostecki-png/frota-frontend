@@ -1,5 +1,5 @@
 // src/components/pages/Abastecimento.jsx
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useFetch, useMutation } from '../../hooks/useFetch';
 import { abastecimentoAPI, veiculoAPI } from '../../api';
 import { Card, CardHeader, Table, Btn, Input, Select, FormGrid, PageLoading } from '../ui';
@@ -22,9 +22,9 @@ const FORM_VAZIO = {
 };
 
 export default function Abastecimento() {
-  const { data: veiculos }                    = useFetch(() => veiculoAPI.listar());
-  const { data, loading, refetch }            = useFetch(() => abastecimentoAPI.listar({ limit: 30 }));
-  const { data: resumo }                      = useFetch(() => abastecimentoAPI.resumo({ mes: new Date().getMonth() + 1, ano: new Date().getFullYear() }));
+  const { data: veiculos }                         = useFetch(() => veiculoAPI.listar());
+  const { data, loading, refetch }                 = useFetch(() => abastecimentoAPI.listar({ limit: 30 }));
+  const { data: resumo }                           = useFetch(() => abastecimentoAPI.resumo({ mes: new Date().getMonth() + 1, ano: new Date().getFullYear() }));
   const { executar: criar,     loading: saving }   = useMutation(abastecimentoAPI.criar);
   const { executar: atualizar, loading: updating } = useMutation(abastecimentoAPI.atualizar);
   const { executar: deletar,   loading: deleting } = useMutation(abastecimentoAPI.deletar);
@@ -36,21 +36,6 @@ export default function Abastecimento() {
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-
-  // Soma dos km rodados por veículo: kmAtual - kmAnterior de cada abastecimento
-  const kmPorVeiculo = useMemo(() => {
-    const registros = data?.registros || [];
-    const mapa = {};
-    registros.forEach(r => {
-      if (!r.kmAnterior) return;
-      const km = r.kmAtual - r.kmAnterior;
-      if (km <= 0) return;
-      const id = r.veiculoId;
-      if (!mapa[id]) mapa[id] = { placa: r.veiculo?.placa, motorista: r.veiculo?.motorista, totalKm: 0 };
-      mapa[id].totalKm += km;
-    });
-    return Object.values(mapa).sort((a, b) => b.totalKm - a.totalKm);
-  }, [data]);
 
   function abrirEditar(r) {
     setEditando(r.id);
@@ -101,55 +86,33 @@ export default function Abastecimento() {
     refetch();
   }
 
-  const btnEditar = {
-    background: 'rgba(88,166,255,.15)', color: '#58a6ff',
-    border: '1px solid rgba(88,166,255,.3)',
-    borderRadius: 6, padding: '4px 10px',
-    fontSize: 12, fontWeight: 600, cursor: 'pointer',
-  };
-  const btnExcluir = {
-    background: 'rgba(248,81,73,.12)', color: '#f85149',
-    border: '1px solid rgba(248,81,73,.25)',
-    borderRadius: 6, padding: '4px 10px',
-    fontSize: 12, fontWeight: 600, cursor: 'pointer',
-  };
-  const btnSim = {
-    background: 'rgba(248,81,73,.2)', color: '#f85149',
-    border: '1px solid rgba(248,81,73,.4)',
-    borderRadius: 6, padding: '4px 8px',
-    fontSize: 11, fontWeight: 700, cursor: 'pointer',
-  };
-  const btnNao = {
-    background: 'rgba(139,148,158,.15)', color: '#8b949e',
-    border: '1px solid rgba(139,148,158,.3)',
-    borderRadius: 6, padding: '4px 8px',
-    fontSize: 11, fontWeight: 700, cursor: 'pointer',
-  };
+  const btnEditar  = { background: 'rgba(88,166,255,.15)',  color: '#58a6ff', border: '1px solid rgba(88,166,255,.3)',  borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' };
+  const btnExcluir = { background: 'rgba(248,81,73,.12)',   color: '#f85149', border: '1px solid rgba(248,81,73,.25)', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' };
+  const btnSim     = { background: 'rgba(248,81,73,.2)',    color: '#f85149', border: '1px solid rgba(248,81,73,.4)',  borderRadius: 6, padding: '4px 8px',  fontSize: 11, fontWeight: 700, cursor: 'pointer' };
+  const btnNao     = { background: 'rgba(139,148,158,.15)', color: '#8b949e', border: '1px solid rgba(139,148,158,.3)',borderRadius: 6, padding: '4px 8px',  fontSize: 11, fontWeight: 700, cursor: 'pointer' };
 
   const columns = [
-    { key: 'data',       label: 'Data',    render: r => fmt.data(r.data) },
-    { key: 'veiculo',    label: 'Veículo', render: r => `${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}`.toUpperCase() },
-    { key: 'kmAtual', label: 'KM rodado', mono: true, render: r => {
+    { key: 'data',       label: 'Data',       render: r => fmt.data(r.data) },
+    { key: 'veiculo',    label: 'Veículo',    render: r => `${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}`.toUpperCase() },
+    { key: 'kmRodado',   label: 'KM rodado',  mono: true, render: r => {
         if (!r.kmAnterior || (r.kmAtual - r.kmAnterior) <= 0) return '—';
         return fmt.km(r.kmAtual - r.kmAnterior);
     }},
-    { key: 'litros',     label: 'Litros',  mono: true, render: r => `${fmt.numero(r.litros)} L` },
-    { key: 'valorTotal', label: 'Valor',   mono: true, render: r => fmt.moeda(r.valorTotal) },
-    { key: 'litrosArla', label: 'Arla',    mono: true, render: r => r.litrosArla ? `${fmt.numero(r.litrosArla)} L` : '—' },
-    { key: 'consumoKmL', label: 'Consumo', render: r => {
+    { key: 'litros',     label: 'Litros',     mono: true, render: r => `${fmt.numero(r.litros)} L` },
+    { key: 'valorTotal', label: 'Valor',      mono: true, render: r => fmt.moeda(r.valorTotal) },
+    { key: 'litrosArla', label: 'Arla',       mono: true, render: r => r.litrosArla ? `${fmt.numero(r.litrosArla)} L` : '—' },
+    { key: 'consumoKmL', label: 'Consumo',    render: r => {
         const p = pilConsumo(r.consumoKmL);
         return <span style={{ color: p.color, fontFamily: "'DM Mono'" }}>{p.label}</span>;
     }},
-    { key: 'precoKm', label: 'R$/km', mono: true, render: r => {
+    { key: 'precoKm',    label: 'R$/km',      mono: true, render: r => {
         if (!r.consumoKmL || !r.litros || !r.valorTotal) return '—';
         const kmRodados = r.litros * r.consumoKmL;
         if (!kmRodados) return '—';
         return fmt.moeda(r.valorTotal / kmRodados);
     }},
-    { key: 'posto', label: 'Posto', render: r => (r.posto || '—').toUpperCase() },
-    {
-      key: 'acoes', label: 'Ações',
-      render: r => (
+    { key: 'posto',      label: 'Posto',      render: r => (r.posto || '—').toUpperCase() },
+    { key: 'acoes',      label: 'Ações',      render: r => (
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <button style={btnEditar} onClick={() => abrirEditar(r)}>✏️ Editar</button>
           {confirmDelete === r.id ? (
@@ -162,8 +125,7 @@ export default function Abastecimento() {
             <button style={btnExcluir} onClick={() => setConfirmDelete(r.id)}>🗑️ Excluir</button>
           )}
         </div>
-      ),
-    },
+    )},
   ];
 
   return (
@@ -206,10 +168,7 @@ export default function Abastecimento() {
           <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
           <div style={{ padding: 16, height: 240 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={(resumo || []).map(r => ({
-                placa: r.veiculo?.placa,
-                consumo: r.mediaConsumo,
-              }))}>
+              <BarChart data={(resumo || []).map(r => ({ placa: r.veiculo?.placa, consumo: r.mediaConsumo }))}>
                 <XAxis dataKey="placa" tick={{ fill: '#484f58', fontSize: 10, fontFamily: "'DM Mono'" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: '#484f58', fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 4]} />
                 <Tooltip formatter={v => [`${v} km/L`, 'Consumo']} contentStyle={{ background: '#21262d', border: '1px solid #30363d', borderRadius: 8, fontSize: 12 }} />
@@ -221,43 +180,6 @@ export default function Abastecimento() {
           </div>
         </Card>
       </div>
-
-      {/* Card KM por veículo */}
-      <Card style={{ marginBottom: 16 }}>
-        <CardHeader icon="🛣️" title="KM rodado por veículo (últimos 30 registros)" />
-        <div style={{ padding: '0 16px 8px' }}>
-          {kmPorVeiculo.length === 0 && (
-            <p style={{ fontSize: 13, color: '#484f58', padding: '12px 0' }}>Nenhum registro encontrado.</p>
-          )}
-          {kmPorVeiculo.map((v, i) => (
-            <div
-              key={v.placa}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 0',
-                borderBottom: i < kmPorVeiculo.length - 1 ? '1px solid #21262d' : 'none',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, padding: '2px 7px',
-                  borderRadius: 4, background: 'rgba(88,166,255,.12)',
-                  color: '#58a6ff', border: '1px solid rgba(88,166,255,.25)',
-                  fontFamily: "'DM Mono'",
-                }}>
-                  {v.placa?.toUpperCase()}
-                </span>
-                {v.motorista && (
-                  <span style={{ fontSize: 12, color: '#8b949e' }}>{v.motorista}</span>
-                )}
-              </div>
-              <span style={{ fontFamily: "'DM Mono'", fontSize: 14, fontWeight: 600, color: '#3fb950' }}>
-                {fmt.km(Math.round(v.totalKm))}
-              </span>
-            </div>
-          ))}
-        </div>
-      </Card>
 
       <Card>
         <CardHeader icon="🕐" title="Histórico de abastecimentos" />
