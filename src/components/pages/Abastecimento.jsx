@@ -37,17 +37,19 @@ export default function Abastecimento() {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  // KM mais alto registrado por veículo no histórico carregado
+  // Soma dos km rodados por veículo: kmAtual - kmAnterior de cada abastecimento
   const kmPorVeiculo = useMemo(() => {
     const registros = data?.registros || [];
     const mapa = {};
     registros.forEach(r => {
+      if (!r.kmAnterior) return;
+      const km = r.kmAtual - r.kmAnterior;
+      if (km <= 0) return;
       const id = r.veiculoId;
-      if (!mapa[id] || r.kmAtual > mapa[id].kmAtual) {
-        mapa[id] = { kmAtual: r.kmAtual, placa: r.veiculo?.placa, motorista: r.veiculo?.motorista };
-      }
+      if (!mapa[id]) mapa[id] = { placa: r.veiculo?.placa, motorista: r.veiculo?.motorista, totalKm: 0 };
+      mapa[id].totalKm += km;
     });
-    return Object.values(mapa).sort((a, b) => (a.placa || '').localeCompare(b.placa || ''));
+    return Object.values(mapa).sort((a, b) => b.totalKm - a.totalKm);
   }, [data]);
 
   function abrirEditar(r) {
@@ -127,7 +129,10 @@ export default function Abastecimento() {
   const columns = [
     { key: 'data',       label: 'Data',    render: r => fmt.data(r.data) },
     { key: 'veiculo',    label: 'Veículo', render: r => `${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}`.toUpperCase() },
-    { key: 'kmAtual',    label: 'KM',      mono: true, render: r => fmt.km(r.kmAtual) },
+    { key: 'kmAtual', label: 'KM rodado', mono: true, render: r => {
+        if (!r.kmAnterior || (r.kmAtual - r.kmAnterior) <= 0) return '—';
+        return fmt.km(r.kmAtual - r.kmAnterior);
+    }},
     { key: 'litros',     label: 'Litros',  mono: true, render: r => `${fmt.numero(r.litros)} L` },
     { key: 'valorTotal', label: 'Valor',   mono: true, render: r => fmt.moeda(r.valorTotal) },
     { key: 'litrosArla', label: 'Arla',    mono: true, render: r => r.litrosArla ? `${fmt.numero(r.litrosArla)} L` : '—' },
@@ -219,7 +224,7 @@ export default function Abastecimento() {
 
       {/* Card KM por veículo */}
       <Card style={{ marginBottom: 16 }}>
-        <CardHeader icon="🛣️" title="KM atual por veículo (últimos 30 registros)" />
+        <CardHeader icon="🛣️" title="KM rodado por veículo (últimos 30 registros)" />
         <div style={{ padding: '0 16px 8px' }}>
           {kmPorVeiculo.length === 0 && (
             <p style={{ fontSize: 13, color: '#484f58', padding: '12px 0' }}>Nenhum registro encontrado.</p>
@@ -247,7 +252,7 @@ export default function Abastecimento() {
                 )}
               </div>
               <span style={{ fontFamily: "'DM Mono'", fontSize: 14, fontWeight: 600, color: '#3fb950' }}>
-                {fmt.km(v.kmAtual)}
+                {fmt.km(Math.round(v.totalKm))}
               </span>
             </div>
           ))}
