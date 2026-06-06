@@ -45,23 +45,16 @@ export default function Frete() {
   async function handleSalvar() {
     if (!form.veiculoId) { toast.error('Selecione um veículo para salvar'); return; }
     if (!resultado)      { toast.error('Calcule o frete primeiro'); return; }
-    const dist = Number(form.distanciaKm);
     await salvar({
-      veiculoId:    Number(form.veiculoId),
-      origem:       form.origem,
-      destino:      form.destino,
-      distanciaKm:  dist,
-      precoDiesel:  Number(form.custoKm),
-      consumoKmL:   1,
-      pedagio:      Number(form.custoPedagio) || 0,
-      diariaMot:    Number(form.custoDiaria)  || 0,
-      margemLucro:  0,
-      custoCombustivel: resultado.combustivel,
-      custoPedagio:     resultado.pedagio,
-      custoDiaria:      resultado.diaria,
-      custoDepreciacao: resultado.manutencao,
-      custoTotal:       resultado.total,
-      valorFrete:       resultado.total,
+      veiculoId:   Number(form.veiculoId),
+      origem:      form.origem,
+      destino:     form.destino,
+      distanciaKm: Number(form.distanciaKm),
+      precoDiesel: Number(form.custoKm),
+      consumoKmL:  1,
+      pedagio:     Number(form.custoPedagio) || 0,
+      diariaMot:   Number(form.custoDiaria)  || 0,
+      margemLucro: 0,
     });
     toast.success('Frete salvo!');
     refetch();
