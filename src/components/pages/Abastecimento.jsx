@@ -1,5 +1,5 @@
 // src/components/pages/Abastecimento.jsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFetch, useMutation } from '../../hooks/useFetch';
 import { abastecimentoAPI, veiculoAPI } from '../../api';
 import { Card, CardHeader, Table, Btn, Input, Select, FormGrid, PageLoading } from '../ui';
@@ -36,6 +36,19 @@ export default function Abastecimento() {
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  // KM mais alto registrado por veículo no histórico carregado
+  const kmPorVeiculo = useMemo(() => {
+    const registros = data?.registros || [];
+    const mapa = {};
+    registros.forEach(r => {
+      const id = r.veiculoId;
+      if (!mapa[id] || r.kmAtual > mapa[id].kmAtual) {
+        mapa[id] = { kmAtual: r.kmAtual, placa: r.veiculo?.placa, motorista: r.veiculo?.motorista };
+      }
+    });
+    return Object.values(mapa).sort((a, b) => (a.placa || '').localeCompare(b.placa || ''));
+  }, [data]);
 
   function abrirEditar(r) {
     setEditando(r.id);
@@ -203,6 +216,43 @@ export default function Abastecimento() {
           </div>
         </Card>
       </div>
+
+      {/* Card KM por veículo */}
+      <Card style={{ marginBottom: 16 }}>
+        <CardHeader icon="🛣️" title="KM atual por veículo (últimos 30 registros)" />
+        <div style={{ padding: '0 16px 8px' }}>
+          {kmPorVeiculo.length === 0 && (
+            <p style={{ fontSize: 13, color: '#484f58', padding: '12px 0' }}>Nenhum registro encontrado.</p>
+          )}
+          {kmPorVeiculo.map((v, i) => (
+            <div
+              key={v.placa}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 0',
+                borderBottom: i < kmPorVeiculo.length - 1 ? '1px solid #21262d' : 'none',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, padding: '2px 7px',
+                  borderRadius: 4, background: 'rgba(88,166,255,.12)',
+                  color: '#58a6ff', border: '1px solid rgba(88,166,255,.25)',
+                  fontFamily: "'DM Mono'",
+                }}>
+                  {v.placa?.toUpperCase()}
+                </span>
+                {v.motorista && (
+                  <span style={{ fontSize: 12, color: '#8b949e' }}>{v.motorista}</span>
+                )}
+              </div>
+              <span style={{ fontFamily: "'DM Mono'", fontSize: 14, fontWeight: 600, color: '#3fb950' }}>
+                {fmt.km(v.kmAtual)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       <Card>
         <CardHeader icon="🕐" title="Histórico de abastecimentos" />
