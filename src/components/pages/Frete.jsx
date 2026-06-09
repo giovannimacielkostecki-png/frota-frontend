@@ -16,7 +16,7 @@ export default function Frete() {
     veiculoId: '', motorista: '', origem: '', destino: '',
     distanciaKm: '', custoPedagio: '',
     custoDiaria: 360.31, custoKm: 3.213, manutencaoKm: 0.40,
-    custoArlaKm: 0.10,
+    custoArlaKm: 0.10, custosFixosKm: 2.40,
   };
 
   const [form,          setForm]          = useState(FORM_VAZIO);
@@ -34,16 +34,17 @@ export default function Frete() {
   function abrirEditar(r) {
     setEditandoId(r.id);
     setForm({
-      veiculoId:    r.veiculoId,
-      motorista:    r.veiculo?.motorista || '',
-      origem:       r.origem,
-      destino:      r.destino,
-      distanciaKm:  r.distanciaKm,
-      custoPedagio: r.custoPedagio || '',
-      custoDiaria:  r.custoDiaria  || 360.31,
-      custoKm:      3.213,
-      manutencaoKm: r.distanciaKm ? parseFloat((r.custoDepreciacao / r.distanciaKm).toFixed(4)) : 0.40,
-      custoArlaKm:  r.custoArla && r.distanciaKm ? parseFloat((r.custoArla / r.distanciaKm).toFixed(4)) : 0.10,
+      veiculoId:      r.veiculoId,
+      motorista:      r.veiculo?.motorista || '',
+      origem:         r.origem,
+      destino:        r.destino,
+      distanciaKm:    r.distanciaKm,
+      custoPedagio:   r.custoPedagio || '',
+      custoDiaria:    r.custoDiaria  || 360.31,
+      custoKm:        3.213,
+      manutencaoKm:   r.distanciaKm ? parseFloat((r.custoDepreciacao / r.distanciaKm).toFixed(4)) : 0.40,
+      custoArlaKm:    r.custoArla && r.distanciaKm ? parseFloat((r.custoArla / r.distanciaKm).toFixed(4)) : 0.10,
+      custosFixosKm:  r.custosFixosKm || 2.40,
     });
     setResultado(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -63,25 +64,27 @@ export default function Frete() {
     const diaria      = Number(form.custoDiaria)  || 0;
     const manutencao  = dist * Number(form.manutencaoKm);
     const arla        = dist * Number(form.custoArlaKm);
-    const total       = combustivel + pedagio + diaria + manutencao + arla;
-    setResultado({ combustivel, pedagio, diaria, manutencao, arla, total, dist });
+    const custosFixos = dist * Number(form.custosFixosKm);
+    const total       = combustivel + pedagio + diaria + manutencao + arla + custosFixos;
+    setResultado({ combustivel, pedagio, diaria, manutencao, arla, custosFixos, total, dist });
   }
 
   async function handleSalvar() {
     if (!form.veiculoId) { toast.error('Selecione um veículo'); return; }
     if (!resultado)      { toast.error('Calcule o frete primeiro'); return; }
     const payload = {
-      veiculoId:         Number(form.veiculoId),
-      origem:            form.origem,
-      destino:           form.destino,
-      distanciaKm:       Number(form.distanciaKm),
-      precoDiesel:       Number(form.custoKm),
-      consumoKmL:        1,
-      pedagio:           Number(form.custoPedagio)  || 0,
-      diariaMot:         Number(form.custoDiaria)   || 0,
-      margemLucro:       0,
-      custoArlaKm:       Number(form.custoArlaKm)   || 0,
-      custoManutencaoKm: Number(form.manutencaoKm)  || 0,
+      veiculoId:          Number(form.veiculoId),
+      origem:             form.origem,
+      destino:            form.destino,
+      distanciaKm:        Number(form.distanciaKm),
+      precoDiesel:        Number(form.custoKm),
+      consumoKmL:         1,
+      pedagio:            Number(form.custoPedagio)   || 0,
+      diariaMot:          Number(form.custoDiaria)    || 0,
+      margemLucro:        0,
+      custoArlaKm:        Number(form.custoArlaKm)    || 0,
+      custoManutencaoKm:  Number(form.manutencaoKm)   || 0,
+      custosFixosKm:      Number(form.custosFixosKm)  || 0,
     };
     if (editandoId) {
       await freteAPI.atualizar(editandoId, payload);
@@ -161,6 +164,7 @@ export default function Frete() {
               <Input label="Custo combustível (R$/km)" type="number" step="0.001" value={form.custoKm} onChange={e => set('custoKm', e.target.value)} />
               <Input label="Manutenção (R$/km)" type="number" step="0.01" value={form.manutencaoKm} onChange={e => set('manutencaoKm', e.target.value)} />
               <Input label="Arla 32 (R$/km)" type="number" step="0.001" value={form.custoArlaKm} onChange={e => set('custoArlaKm', e.target.value)} />
+              <Input label="Custos fixos (R$/km)" type="number" step="0.01" value={form.custosFixosKm} onChange={e => set('custosFixosKm', e.target.value)} />
             </FormGrid>
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <Btn type="submit" style={{ flex: 1, justifyContent: 'center' }}>Calcular frete</Btn>
@@ -188,11 +192,12 @@ export default function Frete() {
                   </div>
                 </div>
                 <div style={{ background: '#21262d', borderRadius: 8, padding: 14, marginBottom: 16 }}>
-                  {row('Combustível',      resultado.combustivel)}
-                  {row('Pedágio',          resultado.pedagio)}
-                  {row('Diária motorista', resultado.diaria)}
-                  {row('Manutenção',       resultado.manutencao)}
-                  {row('Arla 32',          resultado.arla)}
+                  {row('Combustível',                          resultado.combustivel)}
+                  {row('Pedágio',                             resultado.pedagio)}
+                  {row('Diária motorista',                    resultado.diaria)}
+                  {row('Manutenção',                          resultado.manutencao)}
+                  {row('Arla 32',                             resultado.arla)}
+                  {row('Custos fixos (financ. + seg. + cons. + IPVA)', resultado.custosFixos)}
                   <div style={{ borderTop: '1px solid #30363d', paddingTop: 8, marginTop: 4 }}>
                     {row('Total', resultado.total, '#f0a500')}
                   </div>
