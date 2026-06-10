@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useFetch, useMutation } from '../../hooks/useFetch';
 import { freteAPI, veiculoAPI } from '../../api';
-import { useRotas } from '../../context/RotasContext';     // ← NOVO
+import { useRotas } from '../../context/RotasContext';
 import { Card, CardHeader, Table, Btn, Input, Select, FormGrid } from '../ui';
 import { fmt } from '../../utils';
 import toast from 'react-hot-toast';
@@ -12,13 +12,16 @@ export default function Frete() {
   const { data: fretes, loading, refetch }      = useFetch(() => freteAPI.listar({ limit: 20 }));
   const { executar: salvar,  loading: saving  } = useMutation(freteAPI.salvar);
   const { executar: deletar, loading: deleting} = useMutation(freteAPI.deletar);
-  const { rotas } = useRotas();                            // ← NOVO
+  const { rotas } = useRotas();
+
+  const hoje = new Date().toISOString().split('T')[0]; // formato YYYY-MM-DD
 
   const FORM_VAZIO = {
     veiculoId: '', motorista: '', origem: '', destino: '',
     distanciaKm: '', custoPedagio: '',
     custoDiaria: 360.31, custoKm: 3.213, manutencaoKm: 0.40,
     custoArlaKm: 0.10, custosFixosKm: 2.40,
+    dataRota: hoje,
   };
 
   const [form,          setForm]          = useState(FORM_VAZIO);
@@ -33,7 +36,6 @@ export default function Frete() {
     if (v?.motorista) set('motorista', v.motorista);
   }
 
-  // ← NOVO: preenche origem, destino e km ao selecionar rota
   function handleRota(id) {
     if (!id) return;
     const rota = rotas.find(r => String(r.id) === String(id));
@@ -61,6 +63,7 @@ export default function Frete() {
       manutencaoKm:   r.distanciaKm ? parseFloat((r.custoDepreciacao / r.distanciaKm).toFixed(4)) : 0.40,
       custoArlaKm:    r.custoArla && r.distanciaKm ? parseFloat((r.custoArla / r.distanciaKm).toFixed(4)) : 0.10,
       custosFixosKm:  r.custosFixosKm || 2.40,
+      dataRota:       r.dataRota ? r.dataRota.split('T')[0] : hoje,
     });
     setResultado(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -101,6 +104,7 @@ export default function Frete() {
       custoArlaKm:        Number(form.custoArlaKm)    || 0,
       custoManutencaoKm:  Number(form.manutencaoKm)   || 0,
       custosFixosKm:      Number(form.custosFixosKm)  || 0,
+      dataRota:           form.dataRota || hoje,
     };
     if (editandoId) {
       await freteAPI.atualizar(editandoId, payload);
@@ -132,7 +136,7 @@ export default function Frete() {
     { key: 'distancia', label: 'Distância', mono: true, render: r => fmt.km(r.distanciaKm) },
     { key: 'valor',     label: 'Custo',     mono: true, render: r => fmt.moeda(r.valorFrete) },
     { key: 'custokm',   label: 'R$/km',     mono: true, render: r => r.distanciaKm ? fmt.moeda(r.valorFrete / r.distanciaKm) : '—' },
-    { key: 'data',      label: 'Data',      render: r => fmt.data(r.criadoEm) },
+    { key: 'data',      label: 'Data',      render: r => r.dataRota ? fmt.data(r.dataRota) : fmt.data(r.criadoEm) },
     { key: 'acoes',     label: 'Ações',     render: r => (
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         <button style={btnEditar} onClick={() => abrirEditar(r)}>✏️ Editar</button>
@@ -173,7 +177,6 @@ export default function Frete() {
               </Select>
               <Input label="Motorista" value={form.motorista} onChange={e => set('motorista', e.target.value)} placeholder="Nome do motorista" />
 
-              {/* ← NOVO: select de rotas cadastradas */}
               {rotas.length > 0 && (
                 <Select
                   label="Usar rota cadastrada"
@@ -190,8 +193,16 @@ export default function Frete() {
                 </Select>
               )}
 
-              <Input label="Origem"  value={form.origem}  onChange={e => set('origem',  e.target.value)} placeholder="ex: São Paulo, SP" required />
-              <Input label="Destino" value={form.destino} onChange={e => set('destino', e.target.value)} placeholder="ex: Campinas, SP"  required />
+              {/* Data da rota ocupa a linha inteira */}
+              <Input
+                label="Data da rota"
+                type="date"
+                value={form.dataRota}
+                onChange={e => set('dataRota', e.target.value)}
+                style={{ gridColumn: '1 / -1' }}
+                required
+              />
+
               <Input label="Distância (km)" type="number" value={form.distanciaKm} onChange={e => set('distanciaKm', e.target.value)} placeholder="338" required />
               <Input label="Pedágio (R$)" type="number" step="0.01" value={form.custoPedagio} onChange={e => set('custoPedagio', e.target.value)} placeholder="404.10" />
               <Input label="Diária motorista (R$)" type="number" step="0.01" value={form.custoDiaria} onChange={e => set('custoDiaria', e.target.value)} />
