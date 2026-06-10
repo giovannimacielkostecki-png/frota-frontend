@@ -23,9 +23,11 @@ export default function Layout() {
       { to: '/rastreamento',  icon: '📍', label: 'Rastreador ao vivo' },
     ]},
     { grupo: 'Operações', itens: [
-      { to: '/abastecimento', icon: '⛽', label: 'Abastecimento' },
-      { to: '/pneus',         icon: '○', label: 'Pneus' },
-      { to: '/frete',         icon: '🧮', label: 'Cálculo de frete' },
+  { to: '/abastecimento', icon: '⛽', label: 'Abastecimento' },
+  { to: '/pneus',         icon: '○', label: 'Pneus' },
+  { to: '/rotas',         icon: '🗺️', label: 'Rotas' },
+  { to: '/frete',         icon: '🧮', label: 'Cálculo de frete' },
+]},
     ]},
     { grupo: 'Gestão', itens: [
       { to: '/veiculos',      icon: '🚛', label: 'Veículos' },
