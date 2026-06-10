@@ -4,6 +4,7 @@ import { useFetch, useMutation } from '../../hooks/useFetch';
 import { freteAPI, veiculoAPI } from '../../api';
 import { useRotas } from '../../context/RotasContext';
 import { Card, CardHeader, Table, Btn, Input, Select, FormGrid } from '../ui';
+import DatePicker from '../ui/DatePicker';
 import { fmt } from '../../utils';
 import toast from 'react-hot-toast';
 
@@ -193,15 +194,9 @@ export default function Frete() {
                 </Select>
               )}
 
-              {/* Data da rota ocupa a linha inteira */}
-              <Input
-                label="Data da rota"
-                type="date"
-                value={form.dataRota}
-                onChange={e => set('dataRota', e.target.value)}
-                style={{ gridColumn: '1 / -1' }}
-                required
-              />
+              <div style={{ gridColumn: '1 / -1' }}>
+                <DatePicker label="Data da rota" value={form.dataRota} onChange={v => set('dataRota', v)} />
+              </div>
 
               <Input label="Distância (km)" type="number" value={form.distanciaKm} onChange={e => set('distanciaKm', e.target.value)} placeholder="338" required />
               <Input label="Pedágio (R$)" type="number" step="0.01" value={form.custoPedagio} onChange={e => set('custoPedagio', e.target.value)} placeholder="404.10" />
