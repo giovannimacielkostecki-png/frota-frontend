@@ -133,7 +133,7 @@ export default function Frete() {
 
   const columns = [
     { key: 'rota',      label: 'Rota',      render: r => `${r.origem} → ${r.destino}` },
-    { key: 'veiculo',   label: 'Veículo',   render: r => r.veiculo?.placa || '—' },
+    { key: 'veiculo', label: 'Veículo', render: r => `${r.veiculo?.placa || '—'}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}` },
     { key: 'distancia', label: 'Distância', mono: true, render: r => fmt.km(r.distanciaKm) },
     { key: 'valor',     label: 'Custo',     mono: true, render: r => fmt.moeda(r.valorFrete) },
     { key: 'custokm',   label: 'R$/km',     mono: true, render: r => r.distanciaKm ? fmt.moeda(r.valorFrete / r.distanciaKm) : '—' },
