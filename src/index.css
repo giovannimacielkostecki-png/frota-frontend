@@ -46,3 +46,13 @@ html, body, #root {
   to { transform: rotate(360deg); }
 }
 .fade-in { animation: fadeIn 0.25s ease forwards; }
+
+/* Input type=date — calendário escuro */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+input[type="date"],
+input[type="date"]::-webkit-datetime-edit {
+  color-scheme: dark;
+}
