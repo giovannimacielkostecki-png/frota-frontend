@@ -1,12 +1,12 @@
-
 // src/components/pages/Rotas.jsx
 import { useState } from 'react';
+import { useRotas } from '../../context/RotasContext';
 import { Card, CardHeader, Table, Btn, Input, FormGrid } from '../ui';
 import toast from 'react-hot-toast';
 
 export default function Rotas() {
-  const [rotas, setRotas] = useState([]);
-  const [form, setForm]   = useState({ origem: '', destino: '', kmEstimado: '' });
+  const { rotas, addRota, removeRota } = useRotas();
+  const [form, setForm]               = useState({ origem: '', destino: '', kmEstimado: '' });
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
@@ -17,19 +17,17 @@ export default function Rotas() {
       toast.error('Preencha todos os campos');
       return;
     }
-    const nova = {
-      id:          Date.now(),
-      origem:      form.origem.trim(),
-      destino:     form.destino.trim(),
-      kmEstimado:  Number(form.kmEstimado),
-    };
-    setRotas(prev => [...prev, nova]);
+    addRota({
+      origem:     form.origem.trim(),
+      destino:    form.destino.trim(),
+      kmEstimado: Number(form.kmEstimado),
+    });
     setForm({ origem: '', destino: '', kmEstimado: '' });
     toast.success('Rota cadastrada!');
   }
 
   function handleDeletar(id) {
-    setRotas(prev => prev.filter(r => r.id !== id));
+    removeRota(id);
     setConfirmDelete(null);
     toast.success('Rota excluída!');
   }
@@ -39,10 +37,10 @@ export default function Rotas() {
   const btnNao     = { background: 'rgba(139,148,158,.15)', color: '#8b949e', border: '1px solid rgba(139,148,158,.3)',borderRadius: 6, padding: '4px 8px',  fontSize: 11, fontWeight: 700, cursor: 'pointer' };
 
   const columns = [
-    { key: 'origem',      label: 'Origem',       render: r => r.origem },
-    { key: 'destino',     label: 'Destino',      render: r => r.destino },
-    { key: 'kmEstimado',  label: 'KM estimado',  mono: true, render: r => `${r.kmEstimado.toLocaleString('pt-BR')} km` },
-    { key: 'acoes',       label: 'Ações',        render: r => (
+    { key: 'origem',     label: 'Origem',      render: r => r.origem },
+    { key: 'destino',    label: 'Destino',     render: r => r.destino },
+    { key: 'kmEstimado', label: 'KM estimado', mono: true, render: r => `${r.kmEstimado.toLocaleString('pt-BR')} km` },
+    { key: 'acoes',      label: 'Ações',       render: r => (
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         {confirmDelete === r.id ? (
           <>
