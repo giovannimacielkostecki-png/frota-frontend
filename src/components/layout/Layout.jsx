@@ -3,8 +3,6 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
-
-
 const linkBase = {
   display: 'flex', alignItems: 'center', gap: 9,
   padding: '8px 10px', borderRadius: 7,
@@ -23,11 +21,10 @@ export default function Layout() {
       { to: '/rastreamento',  icon: '📍', label: 'Rastreador ao vivo' },
     ]},
     { grupo: 'Operações', itens: [
-  { to: '/abastecimento', icon: '⛽', label: 'Abastecimento' },
-  { to: '/pneus',         icon: '○', label: 'Pneus' },
-  { to: '/rotas',         icon: '🗺️', label: 'Rotas' },
-  { to: '/frete',         icon: '🧮', label: 'Cálculo de frete' },
-]},
+      { to: '/abastecimento', icon: '⛽', label: 'Abastecimento' },
+      { to: '/pneus',         icon: '○', label: 'Pneus' },
+      { to: '/rotas',         icon: '🗺️', label: 'Rotas' },
+      { to: '/frete',         icon: '🧮', label: 'Cálculo de frete' },
     ]},
     { grupo: 'Gestão', itens: [
       { to: '/veiculos',      icon: '🚛', label: 'Veículos' },
@@ -46,14 +43,12 @@ export default function Layout() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      {/* SIDEBAR */}
       <aside style={{
         width: 220, minWidth: 220,
         background: '#161b22',
         borderRight: '1px solid #30363d',
         display: 'flex', flexDirection: 'column',
       }}>
-        {/* Logo */}
         <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #30363d' }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: '#f0a500', letterSpacing: '0.02em' }}>
             ⬡ FrotaPRO
@@ -62,8 +57,6 @@ export default function Layout() {
             sistema de gestão v1.0
           </div>
         </div>
-
-        {/* Nav */}
         <nav style={{ padding: '10px 8px', flex: 1, overflowY: 'auto' }}>
           {NAV.map((grupo) => (
             <div key={grupo.grupo}>
@@ -91,8 +84,6 @@ export default function Layout() {
             </div>
           ))}
         </nav>
-
-       {/* Footer */}
         <div style={{ padding: '12px 16px', borderTop: '1px solid #30363d' }}>
           <NavLink to="/perfil" style={{ fontSize: 12, fontWeight: 500, color: '#e6edf3', textDecoration: 'none', display: 'block', marginBottom: 2 }}>
             {usuario?.nome}
@@ -105,7 +96,6 @@ export default function Layout() {
           }}>Sair</button>
         </div>
       </aside>
-      {/* MAIN */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }} className="fade-in">
           <Outlet />
