@@ -66,3 +66,10 @@ export const rastreamentoAPI = {
   historico:    (id, params) => api.get(`/rastreamento/veiculo/${id}`, { params }),
   sincronizar:  ()           => api.post('/rastreamento/sincronizar'),
 };
+
+// ── ROTAS ────────────────────────────────────
+export const rotaAPI = {
+  listar:  ()     => api.get('/rotas'),
+  criar:   (data) => api.post('/rotas', data),
+  deletar: (id)   => api.delete(`/rotas/${id}`),
+};
