@@ -2,15 +2,17 @@
 import { useState } from 'react';
 import { useFetch, useMutation } from '../../hooks/useFetch';
 import { freteAPI, veiculoAPI } from '../../api';
+import { useRotas } from '../../context/RotasContext';     // ← NOVO
 import { Card, CardHeader, Table, Btn, Input, Select, FormGrid } from '../ui';
 import { fmt } from '../../utils';
 import toast from 'react-hot-toast';
 
 export default function Frete() {
-  const { data: veiculos }                    = useFetch(() => veiculoAPI.listar());
-  const { data: fretes, loading, refetch }    = useFetch(() => freteAPI.listar({ limit: 20 }));
+  const { data: veiculos }                      = useFetch(() => veiculoAPI.listar());
+  const { data: fretes, loading, refetch }      = useFetch(() => freteAPI.listar({ limit: 20 }));
   const { executar: salvar,  loading: saving  } = useMutation(freteAPI.salvar);
   const { executar: deletar, loading: deleting} = useMutation(freteAPI.deletar);
+  const { rotas } = useRotas();                            // ← NOVO
 
   const FORM_VAZIO = {
     veiculoId: '', motorista: '', origem: '', destino: '',
@@ -29,6 +31,20 @@ export default function Frete() {
     set('veiculoId', id);
     const v = (veiculos || []).find(v => String(v.id) === String(id));
     if (v?.motorista) set('motorista', v.motorista);
+  }
+
+  // ← NOVO: preenche origem, destino e km ao selecionar rota
+  function handleRota(id) {
+    if (!id) return;
+    const rota = rotas.find(r => String(r.id) === String(id));
+    if (rota) {
+      setForm(p => ({
+        ...p,
+        origem:      rota.origem,
+        destino:     rota.destino,
+        distanciaKm: rota.kmEstimado,
+      }));
+    }
   }
 
   function abrirEditar(r) {
@@ -156,6 +172,24 @@ export default function Frete() {
                 ))}
               </Select>
               <Input label="Motorista" value={form.motorista} onChange={e => set('motorista', e.target.value)} placeholder="Nome do motorista" />
+
+              {/* ← NOVO: select de rotas cadastradas */}
+              {rotas.length > 0 && (
+                <Select
+                  label="Usar rota cadastrada"
+                  defaultValue=""
+                  onChange={e => handleRota(e.target.value)}
+                  style={{ gridColumn: '1 / -1' }}
+                >
+                  <option value="">Selecione uma rota (opcional)...</option>
+                  {rotas.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.origem} → {r.destino} ({r.kmEstimado} km)
+                    </option>
+                  ))}
+                </Select>
+              )}
+
               <Input label="Origem"  value={form.origem}  onChange={e => set('origem',  e.target.value)} placeholder="ex: São Paulo, SP" required />
               <Input label="Destino" value={form.destino} onChange={e => set('destino', e.target.value)} placeholder="ex: Campinas, SP"  required />
               <Input label="Distância (km)" type="number" value={form.distanciaKm} onChange={e => set('distanciaKm', e.target.value)} placeholder="338" required />
