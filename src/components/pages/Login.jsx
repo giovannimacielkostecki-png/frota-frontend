@@ -9,7 +9,7 @@ import './Login.css'
 
 export default function Login() {
  const [email, setEmail] = useState('giovanni@gmail.com');
-const [senha, setSenha] = useState('123456');
+const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate  = useNavigate();
