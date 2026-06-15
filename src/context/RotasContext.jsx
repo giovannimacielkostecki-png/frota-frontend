@@ -1,19 +1,25 @@
 // src/context/RotasContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import { rotaAPI } from '../api';
+import { useAuth } from './AuthContext';
 
 const RotasContext = createContext(null);
 
 export function RotasProvider({ children }) {
-  const [rotas, setRotas]       = useState([]);
+  const [rotas, setRotas] = useState([]);
   const [carregando, setCarregando] = useState(true);
+  const { usuario } = useAuth();
 
   useEffect(() => {
+    if (!usuario) {
+      setCarregando(false);
+      return;
+    }
     rotaAPI.listar()
       .then(res => setRotas(res.data))
       .catch(() => setRotas([]))
       .finally(() => setCarregando(false));
-  }, []);
+  }, [usuario]);
 
   async function addRota(dados) {
     const res = await rotaAPI.criar(dados);
