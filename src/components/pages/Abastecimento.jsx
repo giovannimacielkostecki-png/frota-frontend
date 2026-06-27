@@ -28,7 +28,7 @@ const FORM_VAZIO = {
 
 export default function Abastecimento() {
   const { data: veiculos } = useFetch(() => veiculoAPI.listar());
-  const { data, loading, refetch } = useFetch(() => abastecimentoAPI.listar({ limit: 30 }));
+  const { data, loading, refetch } = useFetch(() => abastecimentoAPI.listar({ limit: 200 }));
   const { data: resumo } = useFetch(() =>
     abastecimentoAPI.resumo({
       mes: new Date().getMonth() + 1,
