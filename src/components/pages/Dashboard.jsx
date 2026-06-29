@@ -62,13 +62,20 @@ export default function Dashboard() {
       <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Dashboard</h2>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-        <StatCard label="Custo total do mês"   value={fmt.moeda(resumo?.custos?.totalMes)}        color="#f0a500" />
-        <StatCard label="Abastecimentos"        value={resumo?.abastecimento?.quantidade ?? '—'}   sub={fmt.moeda(resumo?.abastecimento?.totalValor)} />
-        <StatCard label="Veículos ativos"       value={resumo?.frota?.total ?? '—'}                color="#58a6ff" />
-        <StatCard label="Alertas ativos"        value={resumo?.alertas?.total ?? '—'}              color="#f85149"
-          sub={`${resumo?.alertas?.multasAbertas ?? 0} multas · ${resumo?.alertas?.docVencendo7 ?? 0} vencimentos`} />
-      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
+  <StatCard label="Custo total do mês" value={fmt.moeda(resumo?.custos?.totalMes)} color="#f0a500" />
+
+  <StatCard
+    label="KM da frota no mês"
+    value={resumo?.km?.kmMes ? `${resumo.km.kmMes.toLocaleString('pt-BR')} km` : '—'}
+    color="#3fb950"
+  />
+
+  <StatCard label="Abastecimentos" value={resumo?.abastecimento?.quantidade ?? '—'} sub={fmt.moeda(resumo?.abastecimento?.totalValor)} />
+  <StatCard label="Veículos ativos" value={resumo?.frota?.total ?? '—'} color="#58a6ff" />
+  <StatCard label="Alertas ativos" value={resumo?.alertas?.total ?? '—'} color="#f85149"
+    sub={`${resumo?.alertas?.multasAbertas ?? 0} multas · ${resumo?.alertas?.docVencendo7 ?? 0} vencimentos`} />
+</div>
 
       {/* Gráficos */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
