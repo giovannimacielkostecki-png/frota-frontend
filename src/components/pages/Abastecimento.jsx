@@ -21,6 +21,7 @@ const FORM_VAZIO = {
   kmAtual: '',
   litros: '',
   valorTotal: '',
+  pedagio: '',
   posto: '',
   litrosArla: '',
   valorArla: '',
@@ -57,6 +58,7 @@ export default function Abastecimento() {
       kmAtual: r.kmAtual,
       litros: r.litros,
       valorTotal: r.valorTotal,
+      pedagio: r.pedagio || '',
       posto: r.posto || '',
       litrosArla: r.litrosArla || '',
       valorArla: r.valorArla || '',
@@ -82,6 +84,7 @@ export default function Abastecimento() {
       kmAtual: Number(form.kmAtual),
       litros: Number(form.litros),
       valorTotal: Number(form.valorTotal),
+      pedagio: form.pedagio ? Number(form.pedagio) : 0,
       litrosArla: form.litrosArla ? Number(form.litrosArla) : null,
       valorArla: form.valorArla ? Number(form.valorArla) : null,
     };
@@ -183,9 +186,24 @@ export default function Abastecimento() {
     },
     {
       key: 'valorTotal',
-      label: 'Valor',
+      label: 'Diesel',
       mono: true,
       render: (r) => fmt.moeda(r.valorTotal),
+    },
+    {
+      key: 'pedagio',
+      label: 'Pedágio',
+      mono: true,
+      render: (r) => (r.pedagio ? fmt.moeda(r.pedagio) : '—'),
+    },
+    {
+      key: 'totalGasto',
+      label: 'Total',
+      mono: true,
+      render: (r) => {
+        const total = (Number(r.valorTotal) || 0) + (Number(r.pedagio) || 0);
+        return fmt.moeda(total);
+      },
     },
     {
       key: 'litrosArla',
@@ -206,10 +224,14 @@ export default function Abastecimento() {
       label: 'R$/km',
       mono: true,
       render: (r) => {
-        if (!r.consumoKmL || !r.litros || !r.valorTotal) return '—';
+        if (!r.consumoKmL || !r.litros) return '—';
+
         const kmRodados = r.litros * r.consumoKmL;
         if (!kmRodados) return '—';
-        return fmt.moeda(r.valorTotal / kmRodados);
+
+        const totalGasto = (Number(r.valorTotal) || 0) + (Number(r.pedagio) || 0);
+
+        return fmt.moeda(totalGasto / kmRodados);
       },
     },
     {
@@ -295,6 +317,15 @@ export default function Abastecimento() {
                 value={form.valorTotal}
                 onChange={(e) => set('valorTotal', e.target.value)}
                 required
+              />
+
+              <Input
+                label="Pedágio (R$)"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={form.pedagio}
+                onChange={(e) => set('pedagio', e.target.value)}
               />
 
               <Input label="Posto" placeholder="Nome do posto" value={form.posto} onChange={(e) => set('posto', e.target.value)} />
