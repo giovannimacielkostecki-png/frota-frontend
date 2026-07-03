@@ -366,45 +366,66 @@ export default function Abastecimento() {
         <Card>
           <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
 
-          <div style={{ padding: 16, height: 240 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={(resumo || []).map((r) => ({ placa: r.veiculo?.placa, consumo: r.mediaConsumo }))}>
-                <XAxis
-                  dataKey="placa"
-                  tick={{ fill: '#484f58', fontSize: 10, fontFamily: "'DM Mono'" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
+         <div style={{ padding: 16, height: 300 }}>
+  <ResponsiveContainer width="100%" height="100%">
+    <BarChart
+      data={(resumo || []).map((r) => ({
+        nome: `${r.veiculo?.placa || ''}\n${r.veiculo?.motorista || 'SEM MOTORISTA'}`.toUpperCase(),
+        consumo: r.mediaConsumo,
+      }))}
+      margin={{
+        top: 20,
+        right: 10,
+        left: 0,
+        bottom: 45,
+      }}
+    >
+      <XAxis
+        dataKey="nome"
+        interval={0}
+        height={65}
+        tick={{
+          fill: '#484f58',
+          fontSize: 10,
+          fontFamily: "'DM Mono'",
+        }}
+        tickFormatter={(value) => value.replace('\n', ' ')}
+        axisLine={false}
+        tickLine={false}
+      />
 
-                <YAxis tick={{ fill: '#484f58', fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 4]} />
+      <YAxis
+        tick={{ fill: '#484f58', fontSize: 10 }}
+        axisLine={false}
+        tickLine={false}
+        domain={[0, 4]}
+      />
 
-                <Tooltip
-                  formatter={(v) => [`${v} km/L`, 'Consumo']}
-                  contentStyle={{
-                    background: '#21262d',
-                    border: '1px solid #30363d',
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
+      <Tooltip
+        formatter={(v) => [`${v} km/L`, 'Consumo']}
+        labelFormatter={(label) => label.replace('\n', ' - ')}
+        contentStyle={{
+          background: '#21262d',
+          border: '1px solid #30363d',
+          borderRadius: 8,
+          fontSize: 12,
+        }}
+      />
 
-                <Bar
-                  dataKey="consumo"
-                  radius={[5, 5, 0, 0]}
-                  fill="#f0a500"
-                  label={{
-                    position: 'top',
-                    fill: '#8b949e',
-                    fontSize: 10,
-                    formatter: (v) => (v ? `${v}` : ''),
-                  }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
+      <Bar
+        dataKey="consumo"
+        radius={[5, 5, 0, 0]}
+        fill="#f0a500"
+        label={{
+          position: 'top',
+          fill: '#8b949e',
+          fontSize: 10,
+          formatter: (v) => (v ? `${v}` : ''),
+        }}
+      />
+    </BarChart>
+  </ResponsiveContainer>
+</div>
       <Card>
         <CardHeader icon="🕐" title="Histórico de abastecimentos" />
 
