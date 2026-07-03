@@ -400,10 +400,50 @@ export default function Abastecimento() {
           </form>
         </Card>
 
-        <Card>
-          <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
+       <Card>
+  <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
 
-          <div style={{ padding: 16, height: alturaGrafico }}>
+  <div
+    style={{
+      padding: '12px 16px 0',
+      display: 'flex',
+      gap: 10,
+      alignItems: 'end',
+      flexWrap: 'wrap',
+    }}
+  >
+    <div style={{ width: 180 }}>
+      <Select
+        label="Mês do gráfico"
+        value={mesResumo}
+        onChange={(e) => setMesResumo(Number(e.target.value))}
+      >
+        <option value={1}>Janeiro</option>
+        <option value={2}>Fevereiro</option>
+        <option value={3}>Março</option>
+        <option value={4}>Abril</option>
+        <option value={5}>Maio</option>
+        <option value={6}>Junho</option>
+        <option value={7}>Julho</option>
+        <option value={8}>Agosto</option>
+        <option value={9}>Setembro</option>
+        <option value={10}>Outubro</option>
+        <option value={11}>Novembro</option>
+        <option value={12}>Dezembro</option>
+      </Select>
+    </div>
+
+    <div style={{ width: 120 }}>
+      <Input
+        label="Ano"
+        type="number"
+        value={anoResumo}
+        onChange={(e) => setAnoResumo(Number(e.target.value))}
+      />
+    </div>
+  </div>
+
+  <div style={{ padding: 16, height: alturaGrafico }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={dadosGrafico}
