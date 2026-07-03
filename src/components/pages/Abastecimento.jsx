@@ -28,17 +28,24 @@ const FORM_VAZIO = {
 };
 
 export default function Abastecimento() {
+  const hoje = new Date();
+
+  const [mesResumo, setMesResumo] = useState(hoje.getMonth() + 1);
+  const [anoResumo, setAnoResumo] = useState(hoje.getFullYear());
+
   const { data: veiculos } = useFetch(() => veiculoAPI.listar());
 
   const { data, loading, refetch } = useFetch(() =>
     abastecimentoAPI.listar({ limit: 200 })
   );
 
-  const { data: resumo, refetch: refetchResumo } = useFetch(() =>
-    abastecimentoAPI.resumo({
-      mes: new Date().getMonth() + 1,
-      ano: new Date().getFullYear(),
-    })
+  const { data: resumo, refetch: refetchResumo } = useFetch(
+    () =>
+      abastecimentoAPI.resumo({
+        mes: mesResumo,
+        ano: anoResumo,
+      }),
+    [mesResumo, anoResumo]
   );
 
   const { executar: criar, loading: saving } = useMutation(abastecimentoAPI.criar);
