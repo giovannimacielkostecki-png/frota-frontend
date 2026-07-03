@@ -29,8 +29,12 @@ const FORM_VAZIO = {
 
 export default function Abastecimento() {
   const { data: veiculos } = useFetch(() => veiculoAPI.listar());
-  const { data, loading, refetch } = useFetch(() => abastecimentoAPI.listar({ limit: 200 }));
-  const { data: resumo } = useFetch(() =>
+
+  const { data, loading, refetch } = useFetch(() =>
+    abastecimentoAPI.listar({ limit: 200 })
+  );
+
+  const { data: resumo, refetch: refetchResumo } = useFetch(() =>
     abastecimentoAPI.resumo({
       mes: new Date().getMonth() + 1,
       ano: new Date().getFullYear(),
@@ -52,6 +56,7 @@ export default function Abastecimento() {
 
   function abrirEditar(r) {
     setEditando(r.id);
+
     setForm({
       veiculoId: r.veiculoId,
       data: new Date(r.data).toLocaleDateString('en-CA'),
@@ -63,6 +68,7 @@ export default function Abastecimento() {
       litrosArla: r.litrosArla || '',
       valorArla: r.valorArla || '',
     });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -99,6 +105,7 @@ export default function Abastecimento() {
 
     fecharForm();
     refetch();
+    refetchResumo?.();
   }
 
   async function handleDeletar(id) {
@@ -106,12 +113,20 @@ export default function Abastecimento() {
     toast.success('Abastecimento excluído!');
     setConfirmDelete(null);
     refetch();
+    refetchResumo?.();
   }
 
   const linhasFiltradas = (data?.registros || []).filter((r) => {
     if (!filtroVeiculo) return true;
     return String(r.veiculoId) === String(filtroVeiculo);
   });
+
+  const dadosGrafico = (resumo || []).map((r) => ({
+    nome: `${r.veiculo?.placa || ''} - ${r.veiculo?.motorista || 'SEM MOTORISTA'}`.toUpperCase(),
+    consumo: r.mediaConsumo || 0,
+  }));
+
+  const alturaGrafico = Math.max(300, dadosGrafico.length * 42 + 80);
 
   const btnEditar = {
     background: 'rgba(88,166,255,.15)',
@@ -251,9 +266,11 @@ export default function Abastecimento() {
           {confirmDelete === r.id ? (
             <>
               <span style={{ fontSize: 11, color: '#f85149', fontWeight: 600 }}>Confirmar?</span>
+
               <button style={btnSim} disabled={deleting} onClick={() => handleDeletar(r.id)}>
                 Sim
               </button>
+
               <button style={btnNao} onClick={() => setConfirmDelete(null)}>
                 Não
               </button>
@@ -270,7 +287,9 @@ export default function Abastecimento() {
 
   return (
     <div className="fade-in">
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Abastecimento</h2>
+      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>
+        Abastecimento
+      </h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <Card>
@@ -278,8 +297,14 @@ export default function Abastecimento() {
 
           <form onSubmit={handleSubmit} style={{ padding: 16 }}>
             <FormGrid>
-              <Select label="Veículo" value={form.veiculoId} onChange={(e) => set('veiculoId', e.target.value)} required>
+              <Select
+                label="Veículo"
+                value={form.veiculoId}
+                onChange={(e) => set('veiculoId', e.target.value)}
+                required
+              >
                 <option value="">Selecione...</option>
+
                 {veiculosAtivos.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.placa}
@@ -328,7 +353,12 @@ export default function Abastecimento() {
                 onChange={(e) => set('pedagio', e.target.value)}
               />
 
-              <Input label="Posto" placeholder="Nome do posto" value={form.posto} onChange={(e) => set('posto', e.target.value)} />
+              <Input
+                label="Posto"
+                placeholder="Nome do posto"
+                value={form.posto}
+                onChange={(e) => set('posto', e.target.value)}
+              />
 
               <Input
                 label="Litros Arla (opcional)"
@@ -366,66 +396,66 @@ export default function Abastecimento() {
         <Card>
           <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
 
-         <div style={{ padding: 16, height: 300 }}>
-  <ResponsiveContainer width="100%" height="100%">
-    <BarChart
-      data={(resumo || []).map((r) => ({
-        nome: `${r.veiculo?.placa || ''}\n${r.veiculo?.motorista || 'SEM MOTORISTA'}`.toUpperCase(),
-        consumo: r.mediaConsumo,
-      }))}
-      margin={{
-        top: 20,
-        right: 10,
-        left: 0,
-        bottom: 45,
-      }}
-    >
-      <XAxis
-        dataKey="nome"
-        interval={0}
-        height={65}
-        tick={{
-          fill: '#484f58',
-          fontSize: 10,
-          fontFamily: "'DM Mono'",
-        }}
-        tickFormatter={(value) => value.replace('\n', ' ')}
-        axisLine={false}
-        tickLine={false}
-      />
+          <div style={{ padding: 16, height: alturaGrafico }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={dadosGrafico}
+                layout="vertical"
+                margin={{
+                  top: 10,
+                  right: 25,
+                  left: 15,
+                  bottom: 10,
+                }}
+              >
+                <XAxis
+                  type="number"
+                  domain={[0, 4]}
+                  tick={{ fill: '#484f58', fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
 
-      <YAxis
-        tick={{ fill: '#484f58', fontSize: 10 }}
-        axisLine={false}
-        tickLine={false}
-        domain={[0, 4]}
-      />
+                <YAxis
+                  dataKey="nome"
+                  type="category"
+                  width={150}
+                  tick={{
+                    fill: '#484f58',
+                    fontSize: 9,
+                    fontFamily: "'DM Mono'",
+                  }}
+                  axisLine={false}
+                  tickLine={false}
+                />
 
-      <Tooltip
-        formatter={(v) => [`${v} km/L`, 'Consumo']}
-        labelFormatter={(label) => label.replace('\n', ' - ')}
-        contentStyle={{
-          background: '#21262d',
-          border: '1px solid #30363d',
-          borderRadius: 8,
-          fontSize: 12,
-        }}
-      />
+                <Tooltip
+                  formatter={(v) => [`${v} km/L`, 'Consumo']}
+                  contentStyle={{
+                    background: '#21262d',
+                    border: '1px solid #30363d',
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
 
-      <Bar
-        dataKey="consumo"
-        radius={[5, 5, 0, 0]}
-        fill="#f0a500"
-        label={{
-          position: 'top',
-          fill: '#8b949e',
-          fontSize: 10,
-          formatter: (v) => (v ? `${v}` : ''),
-        }}
-      />
-    </BarChart>
-  </ResponsiveContainer>
-</div>
+                <Bar
+                  dataKey="consumo"
+                  radius={[0, 5, 5, 0]}
+                  fill="#f0a500"
+                  label={{
+                    position: 'right',
+                    fill: '#8b949e',
+                    fontSize: 10,
+                    formatter: (v) => (v ? `${v}` : ''),
+                  }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader icon="🕐" title="Histórico de abastecimentos" />
 
@@ -440,8 +470,13 @@ export default function Abastecimento() {
           }}
         >
           <div style={{ width: 320 }}>
-            <Select label="Filtrar por placa" value={filtroVeiculo} onChange={(e) => setFiltroVeiculo(e.target.value)}>
+            <Select
+              label="Filtrar por placa"
+              value={filtroVeiculo}
+              onChange={(e) => setFiltroVeiculo(e.target.value)}
+            >
               <option value="">Todas as placas</option>
+
               {veiculosAtivos.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.placa}
