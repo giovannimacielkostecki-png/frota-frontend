@@ -18,6 +18,7 @@ function pilConsumo(v) {
 const FORM_VAZIO = {
   veiculoId: '',
   data: new Date().toLocaleDateString('en-CA'),
+  motorista: '',
   kmAtual: '',
   litros: '',
   valorTotal: '',
@@ -61,12 +62,24 @@ export default function Abastecimento() {
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
+  function handleVeiculoChange(e) {
+    const veiculoId = e.target.value;
+    const veiculo = veiculosAtivos.find((v) => String(v.id) === String(veiculoId));
+
+    setForm((p) => ({
+      ...p,
+      veiculoId,
+      motorista: veiculo?.motorista || p.motorista || '',
+    }));
+  }
+
   function abrirEditar(r) {
     setEditando(r.id);
 
     setForm({
       veiculoId: r.veiculoId,
       data: new Date(r.data).toLocaleDateString('en-CA'),
+      motorista: r.motorista || r.veiculo?.motorista || '',
       kmAtual: r.kmAtual,
       litros: r.litros,
       valorTotal: r.valorTotal,
@@ -94,6 +107,8 @@ export default function Abastecimento() {
 
     const payload = {
       ...form,
+      veiculoId: Number(form.veiculoId),
+      motorista: form.motorista?.trim() || null,
       kmAtual: Number(form.kmAtual),
       litros: Number(form.litros),
       valorTotal: Number(form.valorTotal),
@@ -188,8 +203,12 @@ export default function Abastecimento() {
     {
       key: 'veiculo',
       label: 'Veículo',
-      render: (r) =>
-        `${r.veiculo?.placa}${r.veiculo?.motorista ? ` · ${r.veiculo.motorista}` : ''}`.toUpperCase(),
+      render: (r) => `${r.veiculo?.placa || '—'}`.toUpperCase(),
+    },
+    {
+      key: 'motorista',
+      label: 'Motorista',
+      render: (r) => (r.motorista || r.veiculo?.motorista || '—').toUpperCase(),
     },
     {
       key: 'kmRodado',
@@ -307,7 +326,7 @@ export default function Abastecimento() {
               <Select
                 label="Veículo"
                 value={form.veiculoId}
-                onChange={(e) => set('veiculoId', e.target.value)}
+                onChange={handleVeiculoChange}
                 required
               >
                 <option value="">Selecione...</option>
@@ -319,6 +338,13 @@ export default function Abastecimento() {
                   </option>
                 ))}
               </Select>
+
+              <Input
+                label="Motorista"
+                placeholder="Nome do motorista"
+                value={form.motorista}
+                onChange={(e) => set('motorista', e.target.value)}
+              />
 
               <DatePicker label="Data" value={form.data} onChange={(v) => set('data', v)} />
 
@@ -400,50 +426,50 @@ export default function Abastecimento() {
           </form>
         </Card>
 
-       <Card>
-  <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
+        <Card>
+          <CardHeader icon="📈" title="Consumo médio por veículo (km/L)" />
 
-  <div
-    style={{
-      padding: '12px 16px 0',
-      display: 'flex',
-      gap: 10,
-      alignItems: 'end',
-      flexWrap: 'wrap',
-    }}
-  >
-    <div style={{ width: 180 }}>
-      <Select
-        label="Mês do gráfico"
-        value={mesResumo}
-        onChange={(e) => setMesResumo(Number(e.target.value))}
-      >
-        <option value={1}>Janeiro</option>
-        <option value={2}>Fevereiro</option>
-        <option value={3}>Março</option>
-        <option value={4}>Abril</option>
-        <option value={5}>Maio</option>
-        <option value={6}>Junho</option>
-        <option value={7}>Julho</option>
-        <option value={8}>Agosto</option>
-        <option value={9}>Setembro</option>
-        <option value={10}>Outubro</option>
-        <option value={11}>Novembro</option>
-        <option value={12}>Dezembro</option>
-      </Select>
-    </div>
+          <div
+            style={{
+              padding: '12px 16px 0',
+              display: 'flex',
+              gap: 10,
+              alignItems: 'end',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ width: 180 }}>
+              <Select
+                label="Mês do gráfico"
+                value={mesResumo}
+                onChange={(e) => setMesResumo(Number(e.target.value))}
+              >
+                <option value={1}>Janeiro</option>
+                <option value={2}>Fevereiro</option>
+                <option value={3}>Março</option>
+                <option value={4}>Abril</option>
+                <option value={5}>Maio</option>
+                <option value={6}>Junho</option>
+                <option value={7}>Julho</option>
+                <option value={8}>Agosto</option>
+                <option value={9}>Setembro</option>
+                <option value={10}>Outubro</option>
+                <option value={11}>Novembro</option>
+                <option value={12}>Dezembro</option>
+              </Select>
+            </div>
 
-    <div style={{ width: 120 }}>
-      <Input
-        label="Ano"
-        type="number"
-        value={anoResumo}
-        onChange={(e) => setAnoResumo(Number(e.target.value))}
-      />
-    </div>
-  </div>
+            <div style={{ width: 120 }}>
+              <Input
+                label="Ano"
+                type="number"
+                value={anoResumo}
+                onChange={(e) => setAnoResumo(Number(e.target.value))}
+              />
+            </div>
+          </div>
 
-  <div style={{ padding: 16, height: alturaGrafico }}>
+          <div style={{ padding: 16, height: alturaGrafico }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={dadosGrafico}
