@@ -15,6 +15,21 @@ function pilConsumo(v) {
   return { label: `${v} km/L`, color: '#f85149' };
 }
 
+const MESES = [
+  { value: 1, label: 'Janeiro' },
+  { value: 2, label: 'Fevereiro' },
+  { value: 3, label: 'Março' },
+  { value: 4, label: 'Abril' },
+  { value: 5, label: 'Maio' },
+  { value: 6, label: 'Junho' },
+  { value: 7, label: 'Julho' },
+  { value: 8, label: 'Agosto' },
+  { value: 9, label: 'Setembro' },
+  { value: 10, label: 'Outubro' },
+  { value: 11, label: 'Novembro' },
+  { value: 12, label: 'Dezembro' },
+];
+
 const FORM_VAZIO = {
   veiculoId: '',
   data: new Date().toLocaleDateString('en-CA'),
@@ -33,6 +48,9 @@ export default function Abastecimento() {
 
   const [mesResumo, setMesResumo] = useState(hoje.getMonth() + 1);
   const [anoResumo, setAnoResumo] = useState(hoje.getFullYear());
+
+  const [mesHistorico, setMesHistorico] = useState(hoje.getMonth() + 1);
+  const [anoHistorico, setAnoHistorico] = useState(hoje.getFullYear());
 
   const { data: veiculos } = useFetch(() => veiculoAPI.listar());
 
@@ -69,7 +87,7 @@ export default function Abastecimento() {
     setForm((p) => ({
       ...p,
       veiculoId,
-      motorista: veiculo?.motorista || p.motorista || '',
+      motorista: veiculo?.motorista || '',
     }));
   }
 
@@ -139,8 +157,16 @@ export default function Abastecimento() {
   }
 
   const linhasFiltradas = (data?.registros || []).filter((r) => {
-    if (!filtroVeiculo) return true;
-    return String(r.veiculoId) === String(filtroVeiculo);
+    const dataRegistro = new Date(r.data);
+
+    const mesRegistro = dataRegistro.getUTCMonth() + 1;
+    const anoRegistro = dataRegistro.getUTCFullYear();
+
+    const bateMes = mesRegistro === Number(mesHistorico);
+    const bateAno = anoRegistro === Number(anoHistorico);
+    const bateVeiculo = !filtroVeiculo || String(r.veiculoId) === String(filtroVeiculo);
+
+    return bateMes && bateAno && bateVeiculo;
   });
 
   const dadosGrafico = (resumo || []).map((r) => ({
@@ -444,18 +470,11 @@ export default function Abastecimento() {
                 value={mesResumo}
                 onChange={(e) => setMesResumo(Number(e.target.value))}
               >
-                <option value={1}>Janeiro</option>
-                <option value={2}>Fevereiro</option>
-                <option value={3}>Março</option>
-                <option value={4}>Abril</option>
-                <option value={5}>Maio</option>
-                <option value={6}>Junho</option>
-                <option value={7}>Julho</option>
-                <option value={8}>Agosto</option>
-                <option value={9}>Setembro</option>
-                <option value={10}>Outubro</option>
-                <option value={11}>Novembro</option>
-                <option value={12}>Dezembro</option>
+                {MESES.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
               </Select>
             </div>
 
@@ -542,6 +561,29 @@ export default function Abastecimento() {
             flexWrap: 'wrap',
           }}
         >
+          <div style={{ width: 180 }}>
+            <Select
+              label="Mês do histórico"
+              value={mesHistorico}
+              onChange={(e) => setMesHistorico(Number(e.target.value))}
+            >
+              {MESES.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div style={{ width: 120 }}>
+            <Input
+              label="Ano"
+              type="number"
+              value={anoHistorico}
+              onChange={(e) => setAnoHistorico(Number(e.target.value))}
+            />
+          </div>
+
           <div style={{ width: 320 }}>
             <Select
               label="Filtrar por placa"
