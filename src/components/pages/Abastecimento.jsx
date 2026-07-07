@@ -170,7 +170,7 @@ export default function Abastecimento() {
   });
 
   const dadosGrafico = (resumo || []).map((r) => ({
-    nome: `${r.veiculo?.placa || ''} - ${r.veiculo?.motorista || 'SEM MOTORISTA'}`.toUpperCase(),
+    nome: `${r.veiculo?.placa || ''}`.toUpperCase(),
     consumo: r.mediaConsumo || 0,
   }));
 
@@ -360,7 +360,6 @@ export default function Abastecimento() {
                 {veiculosAtivos.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.placa}
-                    {v.motorista ? ` · ${v.motorista}` : ''}
                   </option>
                 ))}
               </Select>
@@ -595,7 +594,6 @@ export default function Abastecimento() {
               {veiculosAtivos.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.placa}
-                  {v.motorista ? ` · ${v.motorista}` : ''}
                 </option>
               ))}
             </Select>
